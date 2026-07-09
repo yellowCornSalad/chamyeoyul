@@ -3,141 +3,243 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>참여율 검색</title>
+<title>참여율 관리</title>
 <style>
   :root{
-    --bg:#f7f8fa; --card:#fff; --line:#e5e7eb; --ink:#1f2430; --sub:#6b7280;
-    --accent:#2563eb; --red:#dc2626; --amber:#f59e0b;
+    --bg:#f3f4f7; --panel:#fff; --sidebar:#fff; --line:#ecedf1; --line2:#f2f3f6;
+    --ink:#1a1d23; --ink2:#3f4650; --sub:#8a919e; --muted:#aab0bb;
+    --accent:#6366f1; --accent-d:#4f46e5; --accent-soft:#eef0fe;
+    --red:#dc2626; --red-soft:#fee2e2; --amber:#d97706; --amber-soft:#fef3c7;
+    --green:#16a34a; --green-soft:#dcfce7;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 10px 26px rgba(16,24,40,.05);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:"Pretendard","Malgun Gothic",-apple-system,system-ui,sans-serif;
-    font-size:14px;line-height:1.5}
-  .wrap{max-width:960px;margin:0 auto;padding:24px 18px 80px}
-  h1{font-size:19px;margin:0 0 2px}
-  .note{color:var(--sub);font-size:12.5px;margin:0 0 16px}
-  #gate{max-width:380px;margin:56px auto 0;background:var(--card);border:1px solid var(--line);
-    border-radius:12px;padding:24px}
-  .gaterow{display:flex;gap:8px;margin-top:12px}
-  #pw{flex:1;padding:11px 13px;font-size:15px;border:1.5px solid var(--line);border-radius:8px;outline:none;background:#fff}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,system-ui,sans-serif;font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased}
+  button{font-family:inherit}
+
+  /* ===== gate ===== */
+  #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .gatecard{width:100%;max-width:360px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px 26px;box-shadow:var(--shadow)}
+  .gatecard .brandrow{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+  .gatecard h1{font-size:17px;margin:0}
+  .gatecard .gsub{color:var(--sub);font-size:12.5px;margin:0 0 16px}
+  .gaterow{display:flex;gap:8px}
+  #pw{flex:1;padding:11px 13px;font-size:15px;border:1.5px solid var(--line);border-radius:11px;outline:none}
   #pw:focus{border-color:var(--accent)}
-  #go{padding:0 18px;font-size:14px;font-weight:600;color:#fff;background:var(--accent);
-    border:none;border-radius:8px;cursor:pointer}
+  #go{padding:0 18px;font-size:14px;font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:11px;cursor:pointer}
+  #go:hover{background:var(--accent-d)}
   .pwerr{color:var(--red);font-size:12.5px;margin-top:10px;min-height:16px}
-  .searchbar{position:sticky;top:0;background:var(--bg);padding:12px 0;z-index:5}
-  #q{width:100%;padding:13px 15px;font-size:16px;border:1.5px solid var(--line);
-    border-radius:10px;outline:none;background:var(--card)}
+
+  /* ===== app shell ===== */
+  #app{display:flex;align-items:stretch;min-height:100vh}
+  .sidebar{position:sticky;top:0;height:100vh;flex:0 0 236px;width:236px;background:var(--sidebar);
+    border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
+  .brand .name{font-weight:800;font-size:15px;letter-spacing:-.2px}
+  .brand .sub{font-size:11px;color:var(--muted);letter-spacing:.4px}
+  .nav{display:flex;flex-direction:column;gap:3px}
+  .navitem{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:transparent;
+    color:var(--ink2);font-size:13.5px;font-weight:600;padding:10px 10px;border-radius:10px;cursor:pointer}
+  .navitem:hover{background:#f6f7f9}
+  .navitem.active{background:var(--accent-soft);color:var(--accent-d)}
+  .navitem svg{width:18px;height:18px;flex:0 0 18px}
+  .sidefoot{margin-top:auto}
+  .synccard{border:1px solid var(--line);border-radius:14px;padding:12px 13px;background:#fbfbfd}
+  .synccard .r1{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+  .synccard .r2{color:var(--muted);font-size:11px;margin-top:3px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+  .dot.pulse{box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 6px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+
+  .main{flex:1;min-width:0;padding:26px 30px 60px}
+  .pagehead h1{font-size:22px;margin:0 0 3px;letter-spacing:-.3px;cursor:pointer;display:inline-block}
+  .pagehead h1:hover{color:var(--accent-d)}
+  .pagehead .sub{color:var(--sub);font-size:13px;margin:0 0 18px}
+
+  /* ===== project cards ===== */
+  .cardscroll{display:flex;gap:14px;overflow-x:auto;padding:2px 2px 12px;scroll-snap-type:x proximity}
+  .cardscroll::-webkit-scrollbar{height:8px}
+  .cardscroll::-webkit-scrollbar-thumb{background:#e2e4ea;border-radius:8px}
+  .pcard{flex:0 0 236px;scroll-snap-align:start;background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:15px 17px;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s, box-shadow .12s, border-color .12s}
+  .pcard:hover{transform:translateY(-2px)}
+  .pcard.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft),var(--shadow)}
+  .pcard.total{background:linear-gradient(135deg,#4f46e5,#7c3aed);border:none;color:#fff}
+  .pcard.total .pcard-label,.pcard.total .pcard-foot{color:rgba(255,255,255,.72)}
+  .pcard.total .pcard-badge{background:rgba(255,255,255,.18);color:#fff}
+  .pcard.total.active{box-shadow:0 0 0 3px rgba(124,58,237,.28),var(--shadow)}
+  .pcard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .pcard-name{font-weight:700;font-size:14px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+  .pcard-badge{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--muted);background:#f2f3f6;border-radius:20px;padding:2px 8px}
+  .pcard-label{font-size:10.5px;letter-spacing:.7px;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
+  .pcard-big{font-size:26px;font-weight:800;letter-spacing:-.5px}
+  .pcard-big .unit{font-size:13px;font-weight:600;margin-left:2px;color:var(--sub)}
+  .pcard.total .pcard-big .unit{color:rgba(255,255,255,.7)}
+  .pcard-foot{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line2);
+    font-size:11.5px;color:var(--sub)}
+  .pcard.total .pcard-foot{border-top-color:rgba(255,255,255,.18)}
+  .pcard-foot .fx{display:inline-flex;align-items:center;gap:5px}
+  .pd{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .pd.red{background:var(--red)} .pd.amber{background:var(--amber)} .pd.green{background:var(--green)}
+  .hint{color:var(--muted);font-size:11.5px;margin:2px 2px 18px}
+
+  /* ===== panel ===== */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:6px 6px 8px}
+  .panelhead{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;padding:16px 16px 12px;flex-wrap:wrap}
+  .panelhead h2{font-size:16px;margin:0}
+  .panelsub{color:var(--sub);font-size:12px;margin-top:3px}
+  .searchwrap{position:relative}
+  #q{width:230px;max-width:52vw;padding:9px 34px 9px 13px;font-size:13.5px;border:1.5px solid var(--line);border-radius:11px;outline:none;background:#fff}
   #q:focus{border-color:var(--accent)}
-  .stat{display:flex;gap:14px;flex-wrap:wrap;margin:6px 2px 0;color:var(--sub);font-size:12.5px}
-  .stat b{color:var(--ink)}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
-    padding:16px 16px 14px;margin:12px 0}
-  .card h2{font-size:17px;margin:0 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .tag{font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;background:#eef2ff;color:#4338ca}
-  .tag.new{background:#ecfdf5;color:#047857}
-  .tag.lead{background:#fef3c7;color:#92400e}
-  .editbtn{margin-left:auto;font-size:12px;font-weight:600;color:var(--accent);background:#eef2ff;
-    border:none;border-radius:7px;padding:5px 12px;cursor:pointer}
-  .editbtn:hover{background:#e0e7ff}
-  .card.editing{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
-  .editnote{color:var(--sub);font-size:12px;margin:0 0 10px}
-  .yrhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
-  .yrhead .sum{font-size:13px}
+  .qclear{position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:#eef0f3;color:var(--sub);
+    border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .qclear:hover{background:#e2e4e9}
+  .pills{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 12px}
+  .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink2);
+    font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:20px;cursor:pointer}
+  .pill:hover{background:#f7f8fa}
+  .pill.active{background:#1f2430;color:#fff;border-color:#1f2430}
+  .pill .cnt{font-size:11px;background:rgba(0,0,0,.08);border-radius:20px;padding:1px 7px;font-weight:700}
+  .pill.active .cnt{background:rgba(255,255,255,.22)}
+
+  /* ===== list table ===== */
+  .ptable{width:100%;border-collapse:collapse;font-size:13.5px}
+  .ptable th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.3px;text-transform:uppercase;
+    padding:9px 16px;border-bottom:1px solid var(--line)}
+  .ptable th.r{text-align:right}
+  .ptable td{padding:12px 16px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  .ptable td:first-child{white-space:nowrap}
+  .ptable td:nth-child(2){max-width:280px}
+  .ptable tr[data-n]{cursor:pointer}
+  .ptable tr[data-n]:hover td{background:#f8f9fc}
+  .ptable td.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ptable td.over{color:var(--red);font-weight:700}
+  .ptable td.full{color:var(--amber);font-weight:700}
+  .barcol{width:120px}
+  .bar{height:6px;border-radius:5px;background:#eef0f3;overflow:hidden;min-width:64px}
+  .bar>span{display:block;height:100%;border-radius:5px}
+  .pjnames{color:var(--sub);font-size:11.5px}
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px}
+  .badge.red{color:var(--red);background:var(--red-soft)} .badge.amber{color:var(--amber);background:var(--amber-soft)}
+  .badge.green{color:var(--green);background:var(--green-soft)}
+  .empty{color:var(--sub);padding:28px 16px;text-align:center}
+
+  /* ===== back bar ===== */
+  .backbar{padding:12px 16px 4px}
+  .backbtn{border:none;background:transparent;color:var(--accent-d);font-size:13px;font-weight:700;cursor:pointer;padding:4px 2px}
+  .backbtn:hover{text-decoration:underline}
+
+  /* ===== detail / edit card ===== */
+  .card{background:#fff;border-top:1px solid var(--line2);padding:6px 18px 18px}
+  .card h2{font-size:18px;margin:6px 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-d)}
+  .tag.new{background:var(--green-soft);color:#047857}
+  .tag.lead{background:var(--amber-soft);color:#92400e}
+  .editbtn{margin-left:auto;font-size:12.5px;font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:9px;padding:8px 15px;cursor:pointer}
+  .editbtn:hover{background:var(--accent-d)}
+  .editnote{color:var(--sub);font-size:12px;margin:0 0 12px}
+  .yrhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:8px 0 10px}
+  .yrhead .sum{font-size:14px;font-weight:600}
   .yrhead .rem{color:var(--sub);font-size:12.5px}
   .over{color:var(--red);font-weight:700}
   .full{color:var(--amber);font-weight:700}
-  table.pj{width:100%;border-collapse:collapse;margin:2px 0 10px;font-size:13px}
-  table.pj td{padding:6px 8px;border-bottom:1px solid #f0f1f3;vertical-align:middle}
+  table.pj{width:100%;border-collapse:collapse;margin:2px 0 12px;font-size:13px}
+  table.pj td{padding:8px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
   table.pj td.p{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
   table.pj .rl{color:var(--sub);font-size:11.5px}
   table.pj .nt{color:var(--red);font-size:11.5px}
-  .editseg{display:inline-flex;align-items:center;gap:3px;margin-left:10px}
-  .editseg:first-child{margin-left:0}
-  .rateinp{width:66px;padding:5px 7px;font-size:13px;border:1.5px solid var(--line);border-radius:7px;
-    text-align:right;font-variant-numeric:tabular-nums}
-  .rateinp:focus{outline:none;border-color:var(--accent)}
-  .seglbl{color:var(--sub);font-size:11px}
-  .editactions{display:flex;align-items:center;gap:8px;margin-top:6px}
-  .savebtn{font-size:13px;font-weight:600;color:#fff;background:var(--accent);border:none;border-radius:8px;padding:8px 18px;cursor:pointer}
-  .cancelbtn{font-size:13px;color:var(--sub);background:#f3f4f6;border:none;border-radius:8px;padding:8px 14px;cursor:pointer}
-  .savemsg{color:var(--sub);font-size:12px}
-  .strip{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:2px 0 4px}
-  .cell{border-radius:6px;padding:5px 2px 4px;text-align:center;font-size:11px}
+  .strip{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin:2px 0 4px}
+  .cell{border-radius:7px;padding:6px 2px 5px;text-align:center;font-size:11px}
   .cell .m{color:var(--sub);font-size:9.5px;display:block;margin-bottom:1px}
-  .cell .v{font-variant-numeric:tabular-nums;font-weight:600}
-  .legend{color:var(--sub);font-size:11px;margin-top:2px}
-  table.ov{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);
-    border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  table.ov th,table.ov td{padding:9px 12px;text-align:left;border-bottom:1px solid #f0f1f3}
-  table.ov th{background:#fafbfc;color:var(--sub);font-weight:600;font-size:12px}
-  table.ov tr{cursor:pointer}
-  table.ov tr:hover td{background:#f8faff}
-  table.ov td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .bar{height:7px;border-radius:4px;background:#eef0f3;overflow:hidden;min-width:70px}
-  .bar>span{display:block;height:100%;border-radius:4px}
-  .pjnames{color:var(--sub);font-size:11.5px}
-  .empty{color:var(--sub);padding:24px 4px}
-  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
-    background:#111827;color:#fff;font-size:13px;padding:10px 16px;border-radius:10px;
-    opacity:0;pointer-events:none;transition:all .25s;z-index:50;max-width:90%}
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .toolbar{margin:2px 0 4px}
-  .xlsxbtn{font-size:12.5px;font-weight:600;color:#166534;background:#dcfce7;border:none;border-radius:8px;padding:8px 14px;cursor:pointer}
-  .xlsxbtn:hover{background:#bbf7d0}
-  .ejrow{border-bottom:1px solid #f0f1f3;padding:8px 0}
+  .cell .v{font-variant-numeric:tabular-nums;font-weight:700}
+  .legend{color:var(--muted);font-size:11px;margin-top:4px}
+  .ejrow{border-bottom:1px solid var(--line2);padding:10px 0}
   .ejrow:last-of-type{border-bottom:none}
-  .ejhead{font-size:13px;font-weight:600;margin-bottom:4px}
+  .ejhead{font-size:13px;font-weight:700;margin-bottom:6px}
   .ejhead .rl{font-weight:400;color:var(--sub);font-size:11.5px}
   .ejhead .nt{color:var(--red);font-weight:400;font-size:11.5px}
-  .segrow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:4px 0}
-  .moninp{padding:4px 6px;font-size:13px;border:1.5px solid var(--line);border-radius:7px;background:#fff}
+  .segrow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:5px 0}
+  .rateinp{width:66px;padding:6px 8px;font-size:13px;border:1.5px solid var(--line);border-radius:8px;text-align:right;font-variant-numeric:tabular-nums}
+  .rateinp:focus{outline:none;border-color:var(--accent)}
+  .moninp{padding:5px 6px;font-size:13px;border:1.5px solid var(--line);border-radius:8px;background:#fff}
   .segunit{color:var(--sub);font-size:12px}
-  .segdel{border:none;background:#fee2e2;color:#b91c1c;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:14px;line-height:1;margin-left:2px}
-  .segadd{border:1px dashed var(--line);background:#fff;color:var(--sub);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer;margin-top:3px}
-  #homeTitle{cursor:pointer;display:inline-block}
-  #homeTitle:hover{color:var(--accent)}
-  .searchwrap{position:relative}
-  #q{padding-right:42px}
-  .qclear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:#eef0f3;color:var(--sub);
-    border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center}
-  .qclear:hover{background:#e0e2e6}
-  .backbar{margin:2px 0 6px}
-  .backbtn{border:none;background:transparent;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;padding:6px 2px}
-  .backbtn:hover{text-decoration:underline}
+  .segdel{border:none;background:var(--red-soft);color:#b91c1c;border-radius:7px;width:26px;height:26px;cursor:pointer;font-size:15px;line-height:1;margin-left:2px}
+  .segadd{border:1px dashed var(--line);background:#fff;color:var(--sub);border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer;margin-top:4px}
+  .editactions{display:flex;align-items:center;gap:8px;margin-top:12px}
+  .savebtn{font-size:13px;font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:9px;padding:9px 20px;cursor:pointer}
+  .savebtn:hover{background:var(--accent-d)}
+  .cancelbtn{font-size:13px;color:var(--ink2);background:#f1f2f5;border:none;border-radius:9px;padding:9px 15px;cursor:pointer}
+  .savemsg{color:var(--sub);font-size:12px}
+
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#1a1d23;color:#fff;
+    font-size:13px;padding:11px 17px;border-radius:12px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;max-width:90%}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:820px){
+    #app{flex-direction:column}
+    .sidebar{position:static;height:auto;width:auto;flex:none;flex-direction:row;align-items:center;gap:10px;padding:10px 14px;border-right:none;border-bottom:1px solid var(--line)}
+    .brand{padding:0}
+    .nav{flex-direction:row;margin-left:8px}
+    .sidefoot{margin:0 0 0 auto}
+    .synccard{padding:7px 10px}.synccard .r2{display:none}
+    .main{padding:18px 16px 50px}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
   <div id="gate">
-    <h1>참여율 검색</h1>
-    <p class="note">열람하려면 비밀번호를 입력하세요.</p>
-    <div class="gaterow">
-      <input id="pw" type="password" placeholder="비밀번호" autocomplete="off" autofocus>
-      <button id="go">확인</button>
+    <div class="gatecard">
+      <div class="brandrow"><div class="mark">참</div><div><h1>참여율 관리</h1></div></div>
+      <p class="gsub">열람하려면 비밀번호를 입력하세요.</p>
+      <div class="gaterow">
+        <input id="pw" type="password" placeholder="비밀번호" autocomplete="off" autofocus>
+        <button id="go">확인</button>
+      </div>
+      <div id="pwerr" class="pwerr"></div>
     </div>
-    <div id="pwerr" class="pwerr"></div>
   </div>
 
   <div id="app" style="display:none">
-    <h1 id="homeTitle" title="처음 화면으로">참여율 검색</h1>
-    <p class="note">이름을 검색하면 참여 중인 과제·참여율, 전체 합계와 잔여(추가 가능)율이 나와요.
-      모든 수치는 2026년 기준, 11개 과제 동시진행으로 월별 합산해 최댓값을 봅니다(최대 100%).
-      카드의 “수정”으로 참여율을 바꾸면 실시간으로 모든 접속자에게 반영됩니다.</p>
-    <div class="searchbar">
-      <div class="searchwrap">
-        <input id="q" type="text" placeholder="이름 검색" autocomplete="off">
-        <button id="qclear" class="qclear" title="지우기" style="display:none">×</button>
+    <aside class="sidebar">
+      <div class="brand"><div class="mark">참</div><div><div class="name">참여율 관리</div><div class="sub">ALLOCATION</div></div></div>
+      <nav class="nav">
+        <button class="navitem active" id="navHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>전체 현황</button>
+        <button class="navitem" id="navXlsx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M4 21h16"/></svg>엑셀 추출</button>
+      </nav>
+      <div class="sidefoot">
+        <div class="synccard">
+          <div class="r1"><span class="dot pulse"></span> 실시간 동기화 중</div>
+          <div class="r2" id="syncsub">2026년 기준 · 11개 과제</div>
+        </div>
       </div>
-      <div class="stat" id="stat"></div>
-    </div>
-    <div class="toolbar"><button id="xlsx" class="xlsxbtn">엑셀로 추출 (과제별 시트)</button></div>
-    <div id="out"></div>
+    </aside>
+
+    <main class="main">
+      <div class="pagehead">
+        <h1 id="homeTitle" title="처음 화면으로">참여율 관리</h1>
+        <p class="sub">인원별 국가과제 참여율과 잔여 여력(추가 가능 %)을 확인합니다. 최대 100%.</p>
+      </div>
+      <div class="cardscroll" id="projCards"></div>
+      <div class="hint">카드를 누르면 해당 과제 인원만 볼 수 있어요.</div>
+      <section class="panel">
+        <div class="panelhead">
+          <div><h2>인원 목록</h2><div class="panelsub" id="listsub"></div></div>
+          <div class="searchwrap"><input id="q" type="text" placeholder="이름 검색" autocomplete="off"><button id="qclear" class="qclear" title="지우기" style="display:none">×</button></div>
+        </div>
+        <div class="pills" id="pills"></div>
+        <div id="out"></div>
+      </section>
+    </main>
   </div>
-</div>
 
 <script>
 /* ===== 설정 ===== */
-const ENC = {"salt":"MxFqWRW7LYT6n4QDGGvoKw==","iv":"wTEVCMho45c2MhWt","data":"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"};                       // 오프라인/초기 폴백용 암호문
+const ENC = {"salt":"dhOe8ahizkOFCaBBTMKGdw==","iv":"ruKNIAA+eKzV7GS7","data":"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"};
 const SB_URL = "https://pkencmbryzgtnwrxlksz.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZW5jbWJyeXpndG53cnhsa3N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDYyOTIsImV4cCI6MjA5NDkyMjI5Mn0.Jx8qCUlVgGLDzKiscMetgEGjZ4FSs2ptTixvaUO7IvA";
 const SB_H = { apikey:SB_KEY, Authorization:"Bearer "+SB_KEY };
@@ -145,14 +247,14 @@ const TABLE = "participation_versions";
 
 let PROJECTS=null, INDEX={}, NAMES=[];
 let sessionPassword=null, loadedVersionId=null, editing=null, editBackup=null;
+let selected=null, projectFilter=null, statusFilter="all";
 
-/* ===== 암호화 (WebCrypto) ===== */
+/* ===== 암호화 ===== */
 function b64ToBytes(s){ return Uint8Array.from(atob(s), c=>c.charCodeAt(0)); }
 function bytesToB64(b){ let s=""; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
 async function deriveKey(password, salt){
   const bk = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
-  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:150000, hash:"SHA-256"},
-    bk, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:150000, hash:"SHA-256"}, bk, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
 }
 async function decryptBlob(o, password){
   const key = await deriveKey(password, b64ToBytes(o.salt));
@@ -167,39 +269,28 @@ async function encryptProjects(projects, password){
   return { salt:bytesToB64(salt), iv:bytesToB64(iv), data:bytesToB64(ct) };
 }
 
-/* ===== Supabase REST ===== */
+/* ===== Supabase ===== */
 async function sbLatest(n){
   const r = await fetch(`${SB_URL}/rest/v1/${TABLE}?select=id,created_at,blob&order=created_at.desc&limit=${n||5}`, {headers:SB_H});
   if(!r.ok) throw new Error("sb "+r.status);
   return r.json();
 }
 async function sbInsert(blobObj){
-  const r = await fetch(`${SB_URL}/rest/v1/${TABLE}`, {
-    method:"POST", headers:{...SB_H, "Content-Type":"application/json", Prefer:"return=representation"},
-    body: JSON.stringify({ blob: JSON.stringify(blobObj) })
-  });
+  const r = await fetch(`${SB_URL}/rest/v1/${TABLE}`, {method:"POST", headers:{...SB_H,"Content-Type":"application/json",Prefer:"return=representation"}, body:JSON.stringify({blob:JSON.stringify(blobObj)})});
   if(!r.ok) throw new Error("sb insert "+r.status);
   return (await r.json())[0];
 }
 async function loadData(password){
   let rows=null;
   try{ rows = await sbLatest(5); }catch(e){ rows=null; }
-  if(rows){
-    for(const row of rows){
-      try{ const proj = await decryptBlob(JSON.parse(row.blob), password); return {projects:proj, versionId:row.id}; }catch(e){}
-    }
-  }
-  const proj = await decryptBlob(ENC, password);   // 폴백(비번 틀리면 throw)
+  if(rows){ for(const row of rows){ try{ const proj=await decryptBlob(JSON.parse(row.blob), password); return {projects:proj, versionId:row.id}; }catch(e){} } }
+  const proj = await decryptBlob(ENC, password);
   return {projects:proj, versionId:null};
 }
 
 /* ===== 계산 ===== */
 const r1 = x => Math.round(x*10)/10;
-function strip(entries){
-  const m = Array(13).fill(0);
-  for(const e of entries) for(const [p,f,t] of e.s) for(let i=f;i<=t;i++) m[i]+=p;
-  return m;
-}
+function strip(entries){ const m=Array(13).fill(0); for(const e of entries) for(const [p,f,t] of e.s) for(let i=f;i<=t;i++) m[i]+=p; return m; }
 function peakOf(m){ let mx=0,mi=1; for(let i=1;i<=12;i++) if(m[i]>mx+1e-9){mx=m[i];mi=i;} return {mx:r1(mx),mi}; }
 function segText(s){ return s.map(([p,f,t])=> f===1&&t===12 ? p+"%" : `${p}%(${f}~${t}월)`).join(" → "); }
 function cellColor(v){
@@ -216,11 +307,57 @@ function buildIndex(){
   NAMES = Object.keys(INDEX);
 }
 
-/* ===== 렌더 조각 ===== */
+/* ===== DOM refs ===== */
 const out = document.getElementById("out");
-const statEl = document.getElementById("stat");
 const q = document.getElementById("q");
+const projCardsEl = document.getElementById("projCards");
+const pillsEl = document.getElementById("pills");
+const listsub = document.getElementById("listsub");
 
+/* ===== 카드/필터 ===== */
+function projStats(){
+  const map={};
+  for(const pj of PROJECTS){ let cnt=0,sum=0,nw=0;
+    for(const p of pj.people){ cnt++; if(p.isNew) nw++;
+      const m=Array(13).fill(0); for(const [pct,f,t] of p.s) for(let i=f;i<=t;i++) m[i]+=pct;
+      let mx=0; for(let i=1;i<=12;i++) if(m[i]>mx) mx=m[i]; sum+=mx; }
+    map[pj.name]={cnt, avg:cnt?Math.round(sum/cnt):0, nw}; }
+  return map;
+}
+function renderProjectCards(){
+  const st=projStats();
+  let over=0,full=0; for(const n of NAMES){ const {mx}=peakOf(strip(INDEX[n])); if(mx>100.0001)over++; else if(mx>=99.999)full++; }
+  let h=`<div class="pcard total ${!projectFilter?'active':''}" data-proj=""><div class="pcard-top"><span class="pcard-name">전체</span><span class="pcard-badge">ALL</span></div>`
+    +`<div class="pcard-label">총 인원</div><div class="pcard-big">${NAMES.length}<span class="unit">명</span></div>`
+    +`<div class="pcard-foot"><span class="fx"><i class="pd red"></i>초과 ${over}</span><span class="fx"><i class="pd amber"></i>100% ${full}</span></div></div>`;
+  for(const pj of PROJECTS){ const s=st[pj.name];
+    h+=`<div class="pcard ${projectFilter===pj.name?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name">${pj.name}</span><span class="pcard-badge">2026</span></div>`
+      +`<div class="pcard-label">참여 인원</div><div class="pcard-big">${s.cnt}<span class="unit">명</span></div>`
+      +`<div class="pcard-foot"><span>평균 ${s.avg}%</span><span class="fx">신규 ${s.nw}명</span></div></div>`;
+  }
+  projCardsEl.innerHTML=h;
+  projCardsEl.querySelectorAll(".pcard").forEach(c=> c.onclick=()=>{ projectFilter=c.dataset.proj||null; selected=null; editing=null; render(); });
+}
+function scopeNames(){ return projectFilter ? NAMES.filter(n=> INDEX[n].some(e=>e.project===projectFilter)) : NAMES.slice(); }
+function renderPills(){
+  const scope=scopeNames();
+  let over=0,full=0,room=0; scope.forEach(n=>{ const {mx}=peakOf(strip(INDEX[n])); if(mx>100.0001)over++; else if(mx>=99.999)full++; else room++; });
+  const P=(k,label,cls,cnt)=>`<button class="pill ${statusFilter===k?'active':''}" data-status="${k}">${cls?`<i class="pd ${cls}"></i>`:''}${label}<span class="cnt">${cnt}</span></button>`;
+  pillsEl.innerHTML = P("all","전체","",scope.length)+P("room","여유","green",room)+P("full","100% 도달","amber",full)+P("over","초과","red",over);
+  pillsEl.querySelectorAll(".pill").forEach(b=> b.onclick=()=>{ statusFilter=b.dataset.status; selected=null; render(); });
+}
+function personList(){
+  let names=scopeNames();
+  const term=q.value.trim(); if(term) names=names.filter(n=>n.includes(term));
+  let rows=names.map(n=>{ const {mx}=peakOf(strip(INDEX[n])); return {n,mx}; });
+  if(statusFilter==="over") rows=rows.filter(r=>r.mx>100.0001);
+  else if(statusFilter==="full") rows=rows.filter(r=>r.mx>=99.999&&r.mx<=100.0001);
+  else if(statusFilter==="room") rows=rows.filter(r=>r.mx<99.999);
+  rows.sort((a,b)=> b.mx-a.mx || a.n.localeCompare(b.n));
+  return rows;
+}
+
+/* ===== 렌더 조각 ===== */
 function summaryLine(mx,mi,rem){
   const cls = mx>100.0001?"over":(mx>=99.999?"full":"");
   return `<div class="yrhead"><span class="sum">최대 동시 참여 <span class="${cls}">${mx}%</span> <span style="color:var(--sub)">(${mi}월)</span></span>`
@@ -228,192 +365,131 @@ function summaryLine(mx,mi,rem){
     + (mx>100.0001?` <span class="over">· 100% 초과, 조정 필요</span>`:``) + `</div>`;
 }
 function stripHtml(m){
-  let h = `<div class="strip">`;
-  for(let i=1;i<=12;i++){ const v=r1(m[i]); const c=cellColor(v);
-    h += `<div class="cell" style="background:${c.bg};color:${c.fg}"><span class="m">${i}월</span><span class="v">${v}</span></div>`; }
-  return h + `</div>`;
+  let h=`<div class="strip">`;
+  for(let i=1;i<=12;i++){ const v=r1(m[i]); const c=cellColor(v); h+=`<div class="cell" style="background:${c.bg};color:${c.fg}"><span class="m">${i}월</span><span class="v">${v}</span></div>`; }
+  return h+`</div>`;
 }
-
-function renderStat(){
-  let over=0, full=0;
-  for(const n of NAMES){ const {mx}=peakOf(strip(INDEX[n])); if(mx>100.0001) over++; else if(mx>=99.999) full++; }
-  statEl.innerHTML = `총 <b>${NAMES.length}명</b> · 과제 <b>${PROJECTS.length}개</b>`
-    + ` · 100% 초과 <b class="over">${over}명</b> · 100% 도달 <b class="full">${full}명</b>`;
-}
-
 function cardView(name){
-  const entries = INDEX[name];
-  const anyLead = entries.some(e=>e.role==="과제책임자"||e.role==="실무책임자");
-  const anyNew  = entries.some(e=>e.isNew);
-  const m = strip(entries); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
-  let html = `<div class="card"><h2>${name}`;
-  if(anyLead) html += ` <span class="tag lead">책임급</span>`;
-  if(anyNew)  html += ` <span class="tag new">신규</span>`;
-  html += `<button class="editbtn" data-edit="${name}">수정</button></h2>`;
-  html += summaryLine(mx,mi,rem);
-  html += `<table class="pj">`;
+  const entries=INDEX[name];
+  const anyLead=entries.some(e=>e.role==="과제책임자"||e.role==="실무책임자");
+  const anyNew=entries.some(e=>e.isNew);
+  const m=strip(entries); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
+  let html=`<div class="card"><h2>${name}`;
+  if(anyLead) html+=` <span class="tag lead">책임급</span>`;
+  if(anyNew) html+=` <span class="tag new">신규</span>`;
+  html+=`<button class="editbtn" data-edit="${name}">수정</button></h2>`;
+  html+=summaryLine(mx,mi,rem);
+  html+=`<table class="pj">`;
   for(const e of entries.slice().sort((a,b)=>b.s[0][0]-a.s[0][0])){
-    html += `<tr><td>${e.project}<div class="rl">${e.role}${e.isNew?" · 신규":""}`
-      + (e.note?` <span class="nt">· ${e.note}</span>`:``)
-      + `</div></td><td class="p">${segText(e.s)}</td></tr>`;
+    html+=`<tr><td>${e.project}<div class="rl">${e.role}${e.isNew?" · 신규":""}`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div></td><td class="p">${segText(e.s)}</td></tr>`;
   }
-  html += `</table>` + stripHtml(m)
-    + `<div class="legend">칸 = 그 달의 전체 과제 합산 참여율 (초록 여유 · 노랑 100% 근접 · 빨강 초과)</div></div>`;
+  html+=`</table>`+stripHtml(m)+`<div class="legend">칸 = 그 달의 전체 과제 합산 참여율 (초록 여유 · 노랑 100% 근접 · 빨강 초과)</div></div>`;
   return html;
 }
-
 function monOpts(sel){ let o=""; for(let i=1;i<=12;i++) o+=`<option value="${i}"${i===sel?" selected":""}>${i}</option>`; return o; }
 function cardEdit(name){
-  const entries = INDEX[name];
-  const m = strip(entries); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
-  let html = `<div class="card editing"><h2>${name} <span class="tag lead">수정 중</span></h2>`;
-  html += `<div class="editnote">참여율(%)과 기간(월)을 바꾸면 아래 합계·월별이 바로 갱신돼요. “+ 기간 추가”로 구간을 나누고, ×로 지웁니다. 저장하면 모든 접속자에게 반영됩니다.</div>`;
+  const entries=INDEX[name];
+  const m=strip(entries); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
+  let html=`<div class="card"><h2>${name} <span class="tag lead">수정 중</span></h2>`;
+  html+=`<div class="editnote">참여율(%)과 기간(월)을 바꾸면 아래 합계·월별이 바로 갱신돼요. “+ 기간 추가”로 구간을 나누고, ×로 지웁니다. 저장하면 모든 접속자에게 반영됩니다.</div>`;
   entries.forEach((e,ei)=>{
-    html += `<div class="ejrow"><div class="ejhead">${e.project} <span class="rl">${e.role}${e.isNew?" · 신규":""}</span>`
-      + (e.note?` <span class="nt">· ${e.note}</span>`:``) + `</div>`;
+    html+=`<div class="ejrow"><div class="ejhead">${e.project} <span class="rl">${e.role}${e.isNew?" · 신규":""}</span>`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div>`;
     e.s.forEach((seg,si)=>{
-      html += `<div class="segrow">`
-        + `<input class="rateinp" type="number" min="0" max="100" step="0.1" value="${seg[0]}" data-ei="${ei}" data-si="${si}"><span class="segunit">%</span>`
-        + `<select class="moninp" data-ei="${ei}" data-si="${si}" data-k="1">${monOpts(seg[1])}</select><span class="segunit">월 ~</span>`
-        + `<select class="moninp" data-ei="${ei}" data-si="${si}" data-k="2">${monOpts(seg[2])}</select><span class="segunit">월</span>`
-        + `<button class="segdel" data-ei="${ei}" data-si="${si}" title="이 구간 삭제">×</button></div>`;
+      html+=`<div class="segrow"><input class="rateinp" type="number" min="0" max="100" step="0.1" value="${seg[0]}" data-ei="${ei}" data-si="${si}"><span class="segunit">%</span>`
+        +`<select class="moninp" data-ei="${ei}" data-si="${si}" data-k="1">${monOpts(seg[1])}</select><span class="segunit">월 ~</span>`
+        +`<select class="moninp" data-ei="${ei}" data-si="${si}" data-k="2">${monOpts(seg[2])}</select><span class="segunit">월</span>`
+        +`<button class="segdel" data-ei="${ei}" data-si="${si}" title="이 구간 삭제">×</button></div>`;
     });
-    html += `<button class="segadd" data-ei="${ei}">+ 기간 추가</button></div>`;
+    html+=`<button class="segadd" data-ei="${ei}">+ 기간 추가</button></div>`;
   });
-  html += `<div id="editSummary">${summaryLine(mx,mi,rem)}${stripHtml(m)}</div>`;
-  html += `<div class="editactions"><button class="savebtn" data-save="${name}">저장</button>`
-    + `<button class="cancelbtn" data-cancel="${name}">취소</button><span id="saveMsg" class="savemsg"></span></div></div>`;
+  html+=`<div id="editSummary">${summaryLine(mx,mi,rem)}${stripHtml(m)}</div>`;
+  html+=`<div class="editactions"><button class="savebtn" data-save="${name}">저장</button><button class="cancelbtn" data-cancel="${name}">취소</button><span id="saveMsg" class="savemsg"></span></div></div>`;
   return html;
 }
-
-function personCard(name){ return editing===name ? cardEdit(name) : cardView(name); }
-
-function renderOverview(){
-  const rows = NAMES.map(n=>{ const e=INDEX[n]; const {mx:pk}=peakOf(strip(e));
-    return {n,pk,pjs:[...new Set(e.map(x=>x.project))]}; })
-    .sort((a,b)=> b.pk-a.pk || a.n.localeCompare(b.n));
-  let html = `<table class="ov"><thead><tr><th>이름</th><th>참여 과제</th>`
-    + `<th style="text-align:right">최대</th><th style="width:120px">부하</th><th style="text-align:right">잔여</th></tr></thead><tbody>`;
+const BACKBAR = `<div class="backbar"><button class="backbtn" id="backHome">← 목록으로</button></div>`;
+function renderList(){
+  if(editing){ out.innerHTML=BACKBAR+cardEdit(editing); attachCardHandlers(); return; }
+  if(selected){ out.innerHTML=BACKBAR+cardView(selected); attachCardHandlers(); return; }
+  const rows=personList();
+  listsub.textContent = `${projectFilter||"전체"} · ${rows.length}명`;
+  if(!rows.length){ out.innerHTML=`<div class="empty">조건에 맞는 인원이 없어요.</div>`; return; }
+  let h=`<table class="ptable"><thead><tr><th>이름</th><th>참여 과제</th><th class="r">최대</th><th class="barcol">부하</th><th class="r">잔여</th><th class="r">상태</th></tr></thead><tbody>`;
   for(const r of rows){
-    const cls = r.pk>100.0001?"over":(r.pk>=99.999?"full":"");
-    const barw = Math.min(100,r.pk);
-    const barc = r.pk>100.0001?"#dc2626":(r.pk>=99.999?"#f59e0b":"#22c55e");
-    const rem = r1(100-r.pk);
-    html += `<tr data-n="${r.n}"><td><b>${r.n}</b></td>`
-      + `<td><span class="pjnames">${r.pjs.join(", ")}</span></td>`
-      + `<td class="num ${cls}">${r.pk}%</td>`
-      + `<td><div class="bar"><span style="width:${barw}%;background:${barc}"></span></div></td>`
-      + `<td class="num">${rem<0?`<span class="over">${rem}%</span>`:rem+"%"}</td></tr>`;
+    const pk=r.mx, rem=r1(100-pk);
+    const badge = pk>100.0001?`<span class="badge red">초과</span>`:(pk>=99.999?`<span class="badge amber">100%</span>`:`<span class="badge green">여유</span>`);
+    const barc = pk>100.0001?"var(--red)":(pk>=99.999?"var(--amber)":"var(--green)");
+    const pjs=[...new Set(INDEX[r.n].map(x=>x.project))];
+    h+=`<tr data-n="${r.n}"><td><b>${r.n}</b></td><td><span class="pjnames">${pjs.join(", ")}</span></td>`
+      +`<td class="r ${pk>100.0001?'over':(pk>=99.999?'full':'')}">${pk}%</td>`
+      +`<td class="barcol"><div class="bar"><span style="width:${Math.min(100,pk)}%;background:${barc}"></span></div></td>`
+      +`<td class="r">${rem<0?`<span class="over">${rem}%</span>`:rem+"%"}</td><td class="r">${badge}</td></tr>`;
   }
-  out.innerHTML = html + `</tbody></table>`;
-  out.querySelectorAll("tr[data-n]").forEach(tr=>{ tr.onclick=()=>{ q.value=tr.dataset.n; render(); q.scrollIntoView({block:"start"}); }; });
+  out.innerHTML=h+`</tbody></table>`;
+  out.querySelectorAll("tr[data-n]").forEach(tr=> tr.onclick=()=>{ selected=tr.dataset.n; render(); window.scrollTo(0,0); });
 }
-
-function toggleClear(){ const c=document.getElementById("qclear"); if(c) c.style.display = q.value ? "" : "none"; }
-function goHome(){
-  if(editing && editBackup) INDEX[editing].forEach((e,ei)=>{ e.s.length=0; editBackup[ei].forEach(seg=> e.s.push(seg.slice())); });
-  editing=null; editBackup=null; q.value=""; toggleClear(); renderOverview(); window.scrollTo(0,0);
-}
-const BACKBAR = `<div class="backbar"><button class="backbtn" id="backHome">← 전체 목록</button></div>`;
 function render(){
   if(!PROJECTS) return;
   toggleClear();
-  const term = q.value.trim();
-  if(!term){ if(!editing) renderOverview(); return; }
-  const hits = NAMES.filter(n=>n.includes(term)).sort((a,b)=> peakOf(strip(INDEX[b])).mx - peakOf(strip(INDEX[a])).mx);
-  if(!hits.length){ out.innerHTML = BACKBAR + `<div class="empty">"${term}" 참여 기록 없음.</div>`; attachCardHandlers(); return; }
-  out.innerHTML = BACKBAR + hits.map(personCard).join("");
-  attachCardHandlers();
+  renderProjectCards();
+  renderPills();
+  renderList();
 }
 
+/* ===== 수정 핸들러 ===== */
 function attachCardHandlers(){
-  const bh=document.getElementById("backHome"); if(bh) bh.onclick=goHome;
+  const bh=document.getElementById("backHome"); if(bh) bh.onclick=backToList;
   out.querySelectorAll("[data-edit]").forEach(b=> b.onclick=()=>enterEdit(b.dataset.edit));
   out.querySelectorAll("[data-cancel]").forEach(b=> b.onclick=()=>cancelEdit(b.dataset.cancel));
   out.querySelectorAll("[data-save]").forEach(b=> b.onclick=()=>saveEdit(b.dataset.save));
   out.querySelectorAll(".rateinp").forEach(inp=> inp.oninput=()=>{
-    let v = parseFloat(inp.value); if(isNaN(v)||v<0) v=0;
-    INDEX[editing][+inp.dataset.ei].s[+inp.dataset.si][0] = v;
-    refreshEditSummary();
-  });
+    let v=parseFloat(inp.value); if(isNaN(v)||v<0) v=0;
+    INDEX[editing][+inp.dataset.ei].s[+inp.dataset.si][0]=v; refreshEditSummary(); });
   out.querySelectorAll(".moninp").forEach(sel=> sel.onchange=()=>{
-    INDEX[editing][+sel.dataset.ei].s[+sel.dataset.si][+sel.dataset.k] = parseInt(sel.value,10);
-    refreshEditSummary();
-  });
+    INDEX[editing][+sel.dataset.ei].s[+sel.dataset.si][+sel.dataset.k]=parseInt(sel.value,10); refreshEditSummary(); });
   out.querySelectorAll(".segdel").forEach(b=> b.onclick=()=>{
-    const e = INDEX[editing][+b.dataset.ei];
-    if(e.s.length>1) e.s.splice(+b.dataset.si,1); else e.s[0][0]=0;   // 최소 1구간 유지
-    render();
-  });
+    const e=INDEX[editing][+b.dataset.ei]; if(e.s.length>1) e.s.splice(+b.dataset.si,1); else e.s[0][0]=0; renderList(); });
   out.querySelectorAll(".segadd").forEach(b=> b.onclick=()=>{
-    const e = INDEX[editing][+b.dataset.ei], last=e.s[e.s.length-1];
-    e.s.push([0, last?Math.min(12,last[2]+1):1, 12]);
-    render();
-  });
+    const e=INDEX[editing][+b.dataset.ei], last=e.s[e.s.length-1]; e.s.push([0, last?Math.min(12,last[2]+1):1, 12]); renderList(); });
 }
 function refreshEditSummary(){
-  const m = strip(INDEX[editing]); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
-  const el = document.getElementById("editSummary"); if(el) el.innerHTML = summaryLine(mx,mi,rem)+stripHtml(m);
+  const m=strip(INDEX[editing]); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
+  const el=document.getElementById("editSummary"); if(el) el.innerHTML=summaryLine(mx,mi,rem)+stripHtml(m);
 }
-
-/* ===== 수정 ===== */
-function enterEdit(name){
-  editing = name;
-  editBackup = INDEX[name].map(e=> e.s.map(seg=> seg.slice()));   // 전체 구간 깊은 백업
-  render();
-}
+function enterEdit(name){ editing=name; selected=name; editBackup=INDEX[name].map(e=>e.s.map(seg=>seg.slice())); renderList(); }
 function cancelEdit(name){
-  if(editBackup) INDEX[name].forEach((e,ei)=>{ e.s.length=0; editBackup[ei].forEach(seg=> e.s.push(seg.slice())); });
-  editing=null; editBackup=null; render();
+  if(editBackup) INDEX[name].forEach((e,ei)=>{ e.s.length=0; editBackup[ei].forEach(seg=>e.s.push(seg.slice())); });
+  editing=null; editBackup=null; renderList();
 }
 async function saveEdit(name){
-  const msg = document.getElementById("saveMsg"); if(msg) msg.textContent="저장 중...";
+  const msg=document.getElementById("saveMsg"); if(msg) msg.textContent="저장 중...";
   try{
-    const rows = await sbLatest(1);
-    const latestId = rows[0] ? rows[0].id : null;
-    if(latestId !== loadedVersionId){
-      editing=null; editBackup=null;
-      await reloadFromSb();
-      toast("다른 사람이 먼저 수정했어요. 최신 내용을 불러왔습니다 — 다시 시도해 주세요.");
-      return;
-    }
-    const blob = await encryptProjects(PROJECTS, sessionPassword);
-    const ins = await sbInsert(blob);
-    loadedVersionId = ins.id;
-    editing=null; editBackup=null;
-    render(); renderStat();
-    toast("저장됐습니다. 모든 접속자에게 반영됩니다.");
-  }catch(e){
-    if(msg) msg.textContent = "저장 실패: "+e.message+" (다시 시도)";
-  }
+    const rows=await sbLatest(1); const latestId=rows[0]?rows[0].id:null;
+    if(latestId!==loadedVersionId){ editing=null; editBackup=null; await reloadFromSb(); toast("다른 사람이 먼저 수정했어요. 최신 내용을 불러왔습니다 — 다시 시도해 주세요."); return; }
+    const blob=await encryptProjects(PROJECTS, sessionPassword);
+    const ins=await sbInsert(blob); loadedVersionId=ins.id;
+    editing=null; editBackup=null; render(); toast("저장됐습니다. 모든 접속자에게 반영됩니다.");
+  }catch(e){ if(msg) msg.textContent="저장 실패: "+e.message+" (다시 시도)"; }
 }
-async function reloadFromSb(){
-  const data = await loadData(sessionPassword);
-  PROJECTS = data.projects; loadedVersionId = data.versionId; buildIndex();
-  render(); renderStat();
-}
+async function reloadFromSb(){ const data=await loadData(sessionPassword); PROJECTS=data.projects; loadedVersionId=data.versionId; buildIndex(); render(); }
 
 /* ===== 동기화 폴링 ===== */
 function startPolling(){
-  setInterval(async()=>{
-    if(editing) return;
-    try{
-      const rows = await sbLatest(1);
-      const latestId = rows[0] ? rows[0].id : null;
-      if(latestId && latestId !== loadedVersionId){ await reloadFromSb(); toast("다른 사람의 수정이 반영됐어요."); }
-    }catch(e){}
+  setInterval(async()=>{ if(editing) return;
+    try{ const rows=await sbLatest(1); const latestId=rows[0]?rows[0].id:null;
+      if(latestId&&latestId!==loadedVersionId){ await reloadFromSb(); toast("다른 사람의 수정이 반영됐어요."); } }catch(e){}
   }, 5000);
 }
+function toast(m){ let t=document.getElementById("toast"); if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t);}
+  t.textContent=m; t.className="show"; clearTimeout(t._h); t._h=setTimeout(()=>{t.className="";},3600); }
 
-/* ===== 토스트 ===== */
-function toast(m){
-  let t = document.getElementById("toast");
-  if(!t){ t=document.createElement("div"); t.id="toast"; document.body.appendChild(t); }
-  t.textContent=m; t.className="show";
-  clearTimeout(t._h); t._h=setTimeout(()=>{ t.className=""; }, 3600);
-}
+/* ===== 내비게이션 ===== */
+function toggleClear(){ const c=document.getElementById("qclear"); if(c) c.style.display=q.value?"":"none"; }
+function restoreIfEditing(){ if(editing&&editBackup) INDEX[editing].forEach((e,ei)=>{ e.s.length=0; editBackup[ei].forEach(seg=>e.s.push(seg.slice())); }); editing=null; editBackup=null; }
+function backToList(){ restoreIfEditing(); selected=null; render(); window.scrollTo(0,0); }
+function goHome(){ restoreIfEditing(); selected=null; projectFilter=null; statusFilter="all"; q.value=""; render(); window.scrollTo(0,0); }
+function clearSearch(){ q.value=""; selected=null; render(); }
 
-/* ===== 엑셀(.xlsx) 추출 — 과제별 시트, 라이브러리 없이 자체 생성 ===== */
+/* ===== 엑셀(.xlsx) — 과제별 시트, 라이브러리 없이 자체 생성 ===== */
 function colName(n){ let s=""; while(n>0){ let r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); } return s; }
 function xmlEsc(v){ return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function sheetXml(rows){
@@ -440,7 +516,7 @@ function zipStore(files){
   let cSize=0;central.forEach(c=>cSize+=c.length);const cOff=offset;
   const eocd=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cSize),u32(cOff),u16(0)));
   const all=[...chunks,...central,eocd];let tot=0;all.forEach(a=>tot+=a.length);
-  const out=new Uint8Array(tot);let p=0;for(const a of all){out.set(a,p);p+=a.length;}return out;
+  const o=new Uint8Array(tot);let p=0;for(const a of all){o.set(a,p);p+=a.length;}return o;
 }
 function buildXlsx(sheets){
   const enc=new TextEncoder(),used={};
@@ -464,55 +540,54 @@ function exportSheets(){
   const ov=[["이름","최대 참여율(%)","잔여(추가가능,%)","참여 과제수","참여 과제"]];
   NAMES.map(n=>{const e=INDEX[n];const {mx}=peakOf(strip(e));return {n,mx,pjs:[...new Set(e.map(x=>x.project))]};})
     .sort((a,b)=>b.mx-a.mx||a.n.localeCompare(b.n))
-    .forEach(r=>ov.push([r.n, r.mx, r1(100-r.mx), r.pjs.length, r.pjs.join(", ")]));
-  sheets.push({name:"전체 요약", rows:ov});
+    .forEach(r=>ov.push([r.n,r.mx,r1(100-r.mx),r.pjs.length,r.pjs.join(", ")]));
+  sheets.push({name:"전체 요약",rows:ov});
   for(const pj of PROJECTS){
     const rows=[["구분","이름","신규여부","1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월","비고"]];
     for(const p of pj.people){
       const mm=Array(13).fill(0); for(const [pct,f,t] of p.s) for(let i=f;i<=t;i++) mm[i]+=pct;
-      const row=[p.r||"참여연구원", p.n, p.isNew?"신규":"기존"];
+      const row=[p.r||"참여연구원",p.n,p.isNew?"신규":"기존"];
       for(let i=1;i<=12;i++) row.push(mm[i]?r1(mm[i]):null);
       row.push(p.note||""); rows.push(row);
     }
-    sheets.push({name:pj.name, rows});
+    sheets.push({name:pj.name,rows});
   }
   return sheets;
 }
 function downloadXlsx(){
-  if(!PROJECTS){ return; }
+  if(!PROJECTS) return;
   try{
-    const buf = buildXlsx(exportSheets());
-    const blob = new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    const url = URL.createObjectURL(blob);
+    const buf=buildXlsx(exportSheets());
+    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const url=URL.createObjectURL(blob);
     const d=new Date(), st=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
     const a=document.createElement("a"); a.href=url; a.download=`참여율_${st}.xlsx`;
     document.body.appendChild(a); a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },1000);
     toast("엑셀 파일을 내려받았어요 (과제별 시트).");
   }catch(e){ toast("엑셀 생성 실패: "+e.message); }
 }
 
 /* ===== 게이트 ===== */
 async function unlock(password){
-  const data = await loadData(password);       // 비번 틀리면 throw
-  sessionPassword = password;
-  PROJECTS = data.projects; loadedVersionId = data.versionId; buildIndex();
+  const data=await loadData(password);
+  sessionPassword=password; PROJECTS=data.projects; loadedVersionId=data.versionId; buildIndex();
   document.getElementById("gate").style.display="none";
   document.getElementById("app").style.display="";
-  renderStat(); renderOverview(); startPolling(); q.focus();
+  document.getElementById("syncsub").textContent=`2026년 기준 · ${PROJECTS.length}개 과제 · ${NAMES.length}명`;
+  render(); startPolling(); q.focus();
 }
-function submitPw(){
-  const err = document.getElementById("pwerr"); err.textContent="확인 중...";
-  unlock(document.getElementById("pw").value).then(()=>{ err.textContent=""; })
-    .catch(()=>{ err.textContent="비밀번호가 올바르지 않습니다."; });
-}
+function submitPw(){ const err=document.getElementById("pwerr"); err.textContent="확인 중...";
+  unlock(document.getElementById("pw").value).then(()=>{err.textContent="";}).catch(()=>{err.textContent="비밀번호가 올바르지 않습니다.";}); }
+
 document.getElementById("go").addEventListener("click", submitPw);
 document.getElementById("pw").addEventListener("keydown", e=>{ if(e.key==="Enter") submitPw(); });
-q.addEventListener("input", render);
-q.addEventListener("keydown", e=>{ if(e.key==="Escape") goHome(); });
-document.getElementById("qclear").addEventListener("click", goHome);
+q.addEventListener("input", ()=>{ selected=null; render(); });
+q.addEventListener("keydown", e=>{ if(e.key==="Escape") clearSearch(); });
+document.getElementById("qclear").addEventListener("click", clearSearch);
 document.getElementById("homeTitle").addEventListener("click", goHome);
-document.getElementById("xlsx").addEventListener("click", downloadXlsx);
+document.getElementById("navHome").addEventListener("click", goHome);
+document.getElementById("navXlsx").addEventListener("click", downloadXlsx);
 document.getElementById("pw").focus();
 </script>
 </body>
