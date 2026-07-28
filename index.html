@@ -203,6 +203,20 @@
   .pcard.addcard:hover{border-color:var(--accent);color:var(--accent-d);background:#f8f9ff}
   .pcard.addcard .plus{font-size:24px;line-height:1;font-weight:400}
   .pcard.addcard .lbl{font-size:12.5px;font-weight:700}
+  .histpanel{margin-bottom:14px;padding:0}
+  .histhead{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 9px}
+  .histtitle{font-size:13px;font-weight:800;color:var(--ink2)}
+  .histtoggle{border:none;background:transparent;color:var(--accent-d);font-size:12px;font-weight:700;cursor:pointer;padding:2px 4px}
+  .histtoggle:hover{text-decoration:underline}
+  .histrow{display:flex;align-items:center;gap:12px;padding:9px 16px;border-top:1px solid var(--line2)}
+  .histrow:hover{background:#fafbff}
+  .histwhen{font-size:11.5px;color:var(--muted);white-space:nowrap;flex:0 0 96px;font-variant-numeric:tabular-nums}
+  .histwhat{font-size:12.5px;color:var(--ink2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .histnow{font-size:10px;font-weight:800;color:var(--green);background:var(--green-soft);border-radius:20px;padding:2px 8px;white-space:nowrap}
+  .histback{border:1px solid var(--line);background:#fff;color:var(--ink2);font-size:11.5px;font-weight:700;
+    border-radius:8px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+  .histback:hover{border-color:var(--accent);color:var(--accent-d);background:#f8f9ff}
+  .histempty{padding:10px 16px 14px;color:var(--muted);font-size:12px}
   .newprojbox{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 14px;box-shadow:var(--shadow)}
   .newprojbox .segrow{margin:0}
   .npinput{padding:8px 11px;font-size:13.5px;border:1.5px solid var(--line);border-radius:9px;outline:none;min-width:220px}
@@ -271,6 +285,13 @@
         </div>
         <div class="addhint">추가하면 바로 저장돼요. 인원은 각자 상세 화면의 “과제에 추가”로 넣습니다.</div>
       </div>
+      <section class="panel histpanel" id="histPanel" style="display:none">
+        <div class="histhead">
+          <div class="histtitle">최근 수정 내역</div>
+          <button class="histtoggle" id="histToggle">더보기</button>
+        </div>
+        <div id="histBody"></div>
+      </section>
       <section class="panel">
         <div class="panelhead">
           <div><h2>인원 목록</h2><div class="panelsub" id="listsub"></div></div>
@@ -384,7 +405,7 @@ function renderProjectCards(){
   }
   h+=`<div class="pcard addcard" id="addProjCard"><span class="plus">+</span><span class="lbl">새 과제 추가</span></div>`;
   projCardsEl.innerHTML=h;
-  projCardsEl.querySelectorAll(".pcard[data-proj]").forEach(c=> c.onclick=()=>{ projectFilter=c.dataset.proj||null; selected=null; editing=null; render(); });
+  projCardsEl.querySelectorAll(".pcard[data-proj]").forEach(c=> c.onclick=()=>{ restoreIfEditing(); projectFilter=c.dataset.proj||null; selected=null; pushView(); render(); });
   const ap=document.getElementById("addProjCard");
   if(ap) ap.onclick=()=>{ const box=document.getElementById("newProjBox");
     box.style.display=""; document.getElementById("npName").value=""; document.getElementById("npName").focus(); };
@@ -413,7 +434,7 @@ function renderPills(){
   let over=0,full=0,room=0; scope.forEach(n=>{ const {mx}=peakOf(strip(INDEX[n])); if(mx>100.0001)over++; else if(mx>=99.999)full++; else room++; });
   const P=(k,label,cls,cnt)=>`<button class="pill ${statusFilter===k?'active':''}" data-status="${k}">${cls?`<i class="pd ${cls}"></i>`:''}${label}<span class="cnt">${cnt}</span></button>`;
   pillsEl.innerHTML = P("all","전체","",scope.length)+P("room","여유","green",room)+P("full","100% 도달","amber",full)+P("over","초과","red",over);
-  pillsEl.querySelectorAll(".pill").forEach(b=> b.onclick=()=>{ statusFilter=b.dataset.status; selected=null; render(); });
+  pillsEl.querySelectorAll(".pill").forEach(b=> b.onclick=()=>{ statusFilter=b.dataset.status; selected=null; pushView(); render(); });
 }
 function personList(){
   let names=scopeNames();
@@ -422,7 +443,7 @@ function personList(){
   if(statusFilter==="over") rows=rows.filter(r=>r.mx>100.0001);
   else if(statusFilter==="full") rows=rows.filter(r=>r.mx>=99.999&&r.mx<=100.0001);
   else if(statusFilter==="room") rows=rows.filter(r=>r.mx<99.999);
-  rows.sort((a,b)=> b.mx-a.mx || a.n.localeCompare(b.n));
+  rows.sort((a,b)=> (teamOf(a.n)||"힣").localeCompare(teamOf(b.n)||"힣") || b.mx-a.mx || a.n.localeCompare(b.n));
   return rows;
 }
 
@@ -483,7 +504,8 @@ function cardEdit(name){
   const addable=PROJECTS.filter(p=>!already.has(p.name));
   if(addable.length){
     html+=`<div class="addbox"><div class="addtitle">과제에 추가</div><div class="segrow">`
-      +`<select class="moninp" id="addProj">${addable.map(p=>`<option value="${p.name}">${p.name}</option>`).join("")}</select>`
+      +`<select class="moninp" id="addProj">${addable.map(p=>`<option value="${p.name}">${p.name}</option>`).join("")}<option value="__NEW__">+ 새 과제 만들기…</option></select>`
+      +`<input class="npinput" id="addNewProjName" type="text" placeholder="새 과제명" autocomplete="off" style="display:none;min-width:170px">`
       +`<select class="moninp" id="addRole"><option>참여연구원</option><option>실무책임자</option><option>과제책임자</option></select>`
       +`<input class="rateinp" id="addRate" type="number" min="0" max="100" step="0.1" value="0"><span class="segunit">%</span>`
       +`<select class="moninp" id="addFrom">${monOpts(1)}</select><span class="segunit">월 ~</span>`
@@ -498,8 +520,10 @@ function cardEdit(name){
 }
 const BACKBAR = `<div class="backbar"><button class="backbtn" id="backHome">← 목록으로</button></div>`;
 function renderList(){
-  if(editing){ out.innerHTML=BACKBAR+cardEdit(editing); attachCardHandlers(); return; }
-  if(selected){ out.innerHTML=BACKBAR+cardView(selected); attachCardHandlers(); return; }
+  if(editing){ listsub.textContent=`${editing}${teamOf(editing)?" · "+teamOf(editing):""} · 수정 중`;
+    out.innerHTML=BACKBAR+cardEdit(editing); attachCardHandlers(); return; }
+  if(selected){ listsub.textContent=`${selected}${teamOf(selected)?" · "+teamOf(selected):""}`;
+    out.innerHTML=BACKBAR+cardView(selected); attachCardHandlers(); return; }
   const rows=personList();
   listsub.textContent = `${projectFilter||"전체"} · ${rows.length}명`;
   if(!rows.length){ out.innerHTML=`<div class="empty">조건에 맞는 인원이 없어요.</div>`; return; }
@@ -515,14 +539,14 @@ function renderList(){
       +`<td class="r">${rem<0?`<span class="over">${rem}%</span>`:rem+"%"}</td><td class="r">${badge}</td></tr>`;
   }
   out.innerHTML=h+`</tbody></table>`;
-  out.querySelectorAll("tr[data-n]").forEach(tr=> tr.onclick=()=>{ selected=tr.dataset.n; render(); window.scrollTo(0,0); });
+  out.querySelectorAll("tr[data-n]").forEach(tr=> tr.onclick=()=>{ selected=tr.dataset.n; pushView(); render(); window.scrollTo(0,0); });
 }
 function renderCandPills(){
   const all=candidates();
   const free=all.filter(c=>c.load===0).length, part=all.filter(c=>c.load>0&&c.load<99.999).length, avail=all.filter(c=>c.load<99.999).length;
   const P=(k,label,cls,cnt)=>`<button class="pill ${candStatusFilter===k?'active':''}" data-cs="${k}">${cls?`<i class="pd ${cls}"></i>`:''}${label}<span class="cnt">${cnt}</span></button>`;
   pillsEl.innerHTML = P("all","여유 있는 후보","",avail)+P("free","미배정(100%)","green",free)+P("partial","부분 여유","amber",part);
-  pillsEl.querySelectorAll(".pill").forEach(b=> b.onclick=()=>{ candStatusFilter=b.dataset.cs; render(); });
+  pillsEl.querySelectorAll(".pill").forEach(b=> b.onclick=()=>{ candStatusFilter=b.dataset.cs; pushView(); render(); });
 }
 function renderCandList(){
   let rows=candidates().filter(c=>c.load<99.999);
@@ -542,7 +566,7 @@ function renderCandList(){
   }
   out.innerHTML=h+`</tbody></table>`;
   out.querySelectorAll("tr[data-cn]").forEach(tr=>{ const n=tr.dataset.cn;
-    tr.onclick=()=>{ view="main"; selected=n; projectFilter=null; statusFilter="all"; q.value=""; render(); window.scrollTo(0,0); }; });
+    tr.onclick=()=>{ view="main"; selected=n; projectFilter=null; statusFilter="all"; q.value=""; pushView(); render(); window.scrollTo(0,0); }; });
 }
 function render(){
   if(!PROJECTS) return;
@@ -587,13 +611,21 @@ function attachCardHandlers(){
     if(!pj) return;
     pj.people = pj.people.filter(p=>p.n!==editing);
     buildIndex(); render(); toast(`${pname}에서 제외했어요. “저장”을 눌러야 반영됩니다.`); });
+  const ap2=document.getElementById("addProj"), npn=document.getElementById("addNewProjName");
+  if(ap2&&npn) ap2.onchange=()=>{ const isNew=ap2.value==="__NEW__"; npn.style.display=isNew?"":"none"; if(isNew) npn.focus(); };
   const da=document.getElementById("doAdd");
   if(da) da.onclick=()=>{
-    const pname=document.getElementById("addProj").value;
+    let pname=document.getElementById("addProj").value;
     const role=document.getElementById("addRole").value;
     let rate=parseFloat(document.getElementById("addRate").value); if(isNaN(rate)||rate<0) rate=0; if(rate>100) rate=100;
     const from=parseInt(document.getElementById("addFrom").value,10), to=parseInt(document.getElementById("addTo").value,10);
     if(to<from){ toast("끝 월이 시작 월보다 빠릅니다."); return; }
+    if(pname==="__NEW__"){
+      const nm=(document.getElementById("addNewProjName").value||"").trim();
+      if(!nm){ toast("새 과제명을 입력하세요."); document.getElementById("addNewProjName").focus(); return; }
+      if(PROJECTS.some(p=>p.name===nm)){ toast("같은 이름의 과제가 이미 있습니다."); return; }
+      PROJECTS.push({name:nm, tag:"", year:2026, people:[]}); pname=nm;
+    }
     const pj=PROJECTS.find(p=>p.name===pname); if(!pj) return;
     if(pj.people.some(p=>p.n===editing)){ toast("이미 그 과제에 있습니다."); return; }
     pj.people.push({n:editing, r:role, isNew:document.getElementById("addNew").checked, s:[[rate,from,to]]});
@@ -616,7 +648,7 @@ async function saveProjects(successMsg){
     toast("다른 사람이 먼저 수정했어요. 최신 내용을 불러왔습니다 — 다시 시도해 주세요."); return false; }
   const blob=await encryptProjects(PROJECTS, sessionPassword);
   const ins=await sbInsert(blob); loadedVersionId=ins.id;
-  toast(successMsg||"저장됐습니다. 모든 접속자에게 반영됩니다."); return true;
+  toast(successMsg||"저장됐습니다. 모든 접속자에게 반영됩니다."); loadHistory(); return true;
 }
 async function saveEdit(name){
   const msg=document.getElementById("saveMsg"); if(msg) msg.textContent="저장 중...";
@@ -653,22 +685,104 @@ async function deleteProject(nm){
 }
 async function reloadFromSb(){ const data=await loadData(sessionPassword); PROJECTS=data.projects; loadedVersionId=data.versionId; buildIndex(); render(); }
 
+/* ===== 수정 내역(히스토리) + 되돌리기 ===== */
+const HIST_CACHE={}; let histRows=[], histExpanded=false, histLoading=false;
+function keyMap(projects){ const m={}; for(const pj of projects) for(const p of pj.people) m[p.n+"|"+pj.name]=segText(p.s); return m; }
+function diffSummary(prev,cur){
+  const a=keyMap(prev), b=keyMap(cur), items=[];
+  const pa=new Set(prev.map(p=>p.name)), pb=new Set(cur.map(p=>p.name));
+  pb.forEach(n=>{ if(!pa.has(n)) items.push(`과제 “${n}” 추가`); });
+  pa.forEach(n=>{ if(!pb.has(n)) items.push(`과제 “${n}” 삭제`); });
+  for(const k in b){ if(!(k in a)){ const [nm,pj]=k.split("|"); items.push(`${nm} → ${pj} 투입 (${b[k]})`); } }
+  for(const k in a){ if(!(k in b)){ const [nm,pj]=k.split("|"); items.push(`${nm} → ${pj} 제외`); } }
+  for(const k in b){ if(k in a && a[k]!==b[k]){ const [nm,pj]=k.split("|"); items.push(`${nm} · ${pj} ${a[k]} → ${b[k]}`); } }
+  if(!items.length) return "변경 없음";
+  return items.slice(0,2).join(" · ")+(items.length>2?` 외 ${items.length-2}건`:"");
+}
+function whenText(iso){
+  const d=new Date(iso), now=new Date(), diff=(now-d)/1000;
+  if(diff<60) return "방금 전";
+  if(diff<3600) return Math.floor(diff/60)+"분 전";
+  if(diff<86400) return Math.floor(diff/3600)+"시간 전";
+  const mm=String(d.getMonth()+1).padStart(2,"0"), dd=String(d.getDate()).padStart(2,"0");
+  const hh=String(d.getHours()).padStart(2,"0"), mi=String(d.getMinutes()).padStart(2,"0");
+  return `${mm}/${dd} ${hh}:${mi}`;
+}
+async function loadHistory(){
+  if(histLoading||!sessionPassword) return; histLoading=true;
+  try{
+    const rows=await sbLatest(8);
+    for(const r of rows){ if(!(r.id in HIST_CACHE)){
+      try{ HIST_CACHE[r.id]=await decryptBlob(JSON.parse(r.blob), sessionPassword); }catch(e){ HIST_CACHE[r.id]=null; } } }
+    histRows=rows.map((r,i)=>{
+      const cur=HIST_CACHE[r.id], prev=rows[i+1]?HIST_CACHE[rows[i+1].id]:null;
+      return { id:r.id, at:r.created_at,
+        summary: (cur&&prev)?diffSummary(prev,cur):(i===rows.length-1?"최초 등록":"—") };
+    });
+    renderHistory();
+  }catch(e){}
+  histLoading=false;
+}
+function renderHistory(){
+  const panel=document.getElementById("histPanel"), body=document.getElementById("histBody");
+  if(!histRows.length){ panel.style.display="none"; return; }
+  panel.style.display="";
+  const shown=histExpanded?histRows:histRows.slice(0,3);
+  body.innerHTML = shown.map(h=>{
+    const isNow = h.id===loadedVersionId;
+    return `<div class="histrow"><span class="histwhen">${whenText(h.at)}</span>`
+      +`<span class="histwhat" title="${h.summary.replace(/"/g,"&quot;")}">${h.summary}</span>`
+      +(isNow?`<span class="histnow">현재</span>`
+             :`<button class="histback" data-rb="${h.id}">이 시점으로</button>`)+`</div>`;
+  }).join("");
+  const tg=document.getElementById("histToggle");
+  tg.style.display = histRows.length>3?"":"none";
+  tg.textContent = histExpanded?"접기":`더보기 (${histRows.length-3})`;
+  body.querySelectorAll("[data-rb]").forEach(b=> b.onclick=()=>rollbackTo(b.dataset.rb));
+}
+async function rollbackTo(id){
+  const data=HIST_CACHE[id]; if(!data){ toast("그 시점 내용을 읽을 수 없어요."); return; }
+  const row=histRows.find(h=>h.id===id);
+  if(!confirm(`${row?whenText(row.at):"이 시점"} 상태로 되돌릴까요?\n\n${row?row.summary:""}\n\n되돌린 내용도 새 이력으로 남고, 모든 접속자에게 반영됩니다.`)) return;
+  const snapshot=JSON.parse(JSON.stringify(PROJECTS));
+  restoreIfEditing(); selected=null;
+  PROJECTS=JSON.parse(JSON.stringify(data)); buildIndex();
+  try{
+    const ok=await saveProjects("되돌렸습니다. 모든 접속자에게 반영됩니다.");
+    if(!ok){ PROJECTS=snapshot; buildIndex(); }
+  }catch(e){ PROJECTS=snapshot; buildIndex(); toast("되돌리기 실패: "+e.message); }
+  render(); loadHistory();
+}
+
 /* ===== 동기화 폴링 ===== */
 function startPolling(){
   setInterval(async()=>{ if(editing) return;
     try{ const rows=await sbLatest(1); const latestId=rows[0]?rows[0].id:null;
-      if(latestId&&latestId!==loadedVersionId){ await reloadFromSb(); toast("다른 사람의 수정이 반영됐어요."); } }catch(e){}
+      if(latestId&&latestId!==loadedVersionId){ await reloadFromSb(); loadHistory(); toast("다른 사람의 수정이 반영됐어요."); } }catch(e){}
   }, 5000);
 }
 function toast(m){ let t=document.getElementById("toast"); if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t);}
   t.textContent=m; t.className="show"; clearTimeout(t._h); t._h=setTimeout(()=>{t.className="";},3600); }
 
 /* ===== 내비게이션 ===== */
+let suppressPush=false;
+function snapView(){ return {view, projectFilter, statusFilter, candStatusFilter, selected, term:q.value}; }
+function pushView(){ if(suppressPush) return; try{ history.pushState(snapView(), ""); }catch(e){} }
+function syncView(){ if(suppressPush) return; try{ history.replaceState(snapView(), ""); }catch(e){} }
+window.addEventListener("popstate", e=>{
+  if(!PROJECTS) return;
+  restoreIfEditing();
+  const st=e.state;
+  if(st){ view=st.view||"main"; projectFilter=st.projectFilter||null; statusFilter=st.statusFilter||"all";
+    candStatusFilter=st.candStatusFilter||"all"; selected=st.selected||null; q.value=st.term||""; }
+  else { view="main"; projectFilter=null; statusFilter="all"; candStatusFilter="all"; selected=null; q.value=""; }
+  suppressPush=true; render(); suppressPush=false; window.scrollTo(0,0);
+});
 function toggleClear(){ const c=document.getElementById("qclear"); if(c) c.style.display=q.value?"":"none"; }
 function restoreIfEditing(){ if(editing&&editBackup){ PROJECTS=editBackup; buildIndex(); } editing=null; editBackup=null; }
-function backToList(){ restoreIfEditing(); selected=null; render(); window.scrollTo(0,0); }
-function goHome(){ restoreIfEditing(); view="main"; selected=null; projectFilter=null; statusFilter="all"; q.value=""; render(); window.scrollTo(0,0); }
-function clearSearch(){ q.value=""; selected=null; render(); }
+function backToList(){ restoreIfEditing(); selected=null; pushView(); render(); window.scrollTo(0,0); }
+function goHome(){ restoreIfEditing(); view="main"; selected=null; projectFilter=null; statusFilter="all"; q.value=""; pushView(); render(); window.scrollTo(0,0); }
+function clearSearch(){ q.value=""; selected=null; pushView(); render(); }
 
 /* ===== 엑셀(.xlsx) — 과제별 시트, 라이브러리 없이 자체 생성 ===== */
 function colName(n){ let s=""; while(n>0){ let r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); } return s; }
@@ -757,24 +871,25 @@ async function unlock(password){
   document.getElementById("gate").style.display="none";
   document.getElementById("app").style.display="";
   document.getElementById("syncsub").textContent=`2026년 기준 · ${PROJECTS.length}개 과제 · ${NAMES.length}명`;
-  render(); startPolling(); q.focus();
+  render(); syncView(); startPolling(); loadHistory(); q.focus();
 }
 function submitPw(){ const err=document.getElementById("pwerr"); err.textContent="확인 중...";
   unlock(document.getElementById("pw").value).then(()=>{err.textContent="";}).catch(()=>{err.textContent="비밀번호가 올바르지 않습니다.";}); }
 
 document.getElementById("go").addEventListener("click", submitPw);
 document.getElementById("pw").addEventListener("keydown", e=>{ if(e.key==="Enter") submitPw(); });
-q.addEventListener("input", ()=>{ selected=null; render(); });
+q.addEventListener("input", ()=>{ selected=null; render(); syncView(); });
 q.addEventListener("keydown", e=>{ if(e.key==="Escape") clearSearch(); });
 document.getElementById("qclear").addEventListener("click", clearSearch);
 document.getElementById("homeTitle").addEventListener("click", goHome);
 document.getElementById("brandHome").addEventListener("click", goHome);
 document.getElementById("navHome").addEventListener("click", goHome);
-document.getElementById("navCand").addEventListener("click", ()=>{ view="candidates"; selected=null; editing=null; candStatusFilter="all"; q.value=""; render(); window.scrollTo(0,0); });
+document.getElementById("navCand").addEventListener("click", ()=>{ restoreIfEditing(); view="candidates"; selected=null; candStatusFilter="all"; q.value=""; pushView(); render(); window.scrollTo(0,0); });
 document.getElementById("navXlsx").addEventListener("click", downloadXlsx);
 document.getElementById("npAdd").addEventListener("click", addProject);
 document.getElementById("npCancel").addEventListener("click", ()=>{ document.getElementById("newProjBox").style.display="none"; });
 document.getElementById("npName").addEventListener("keydown", e=>{ if(e.key==="Enter") addProject(); if(e.key==="Escape") document.getElementById("newProjBox").style.display="none"; });
+document.getElementById("histToggle").addEventListener("click", ()=>{ histExpanded=!histExpanded; renderHistory(); });
 document.getElementById("pw").focus();
 </script>
 </body>
