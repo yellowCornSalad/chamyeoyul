@@ -39,6 +39,7 @@
   #app{display:flex;align-items:stretch;min-height:100vh}
   .sidebar{position:sticky;top:0;height:100vh;flex:0 0 236px;width:236px;background:var(--sidebar);
     border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:6px}
+  .brand .mark svg{width:19px;height:19px}
   .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px;cursor:pointer;border-radius:12px;transition:opacity .12s}
   .brand:hover{opacity:.7}
   .brand:active{opacity:.55}
@@ -76,7 +77,7 @@
   .pcard.total .pcard-badge{background:rgba(255,255,255,.18);color:#fff}
   .pcard.total.active{box-shadow:0 0 0 3px rgba(124,58,237,.28),var(--shadow)}
   .pcard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .pcard-name{font-weight:700;font-size:14px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+  .pcard-name{font-weight:700;font-size:14px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;display:flex;align-items:center}
   .pcard-badge{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--muted);background:#f2f3f6;border-radius:20px;padding:2px 8px}
   .pcard-label{font-size:10.5px;letter-spacing:.7px;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
   .pcard-big{font-size:26px;font-weight:800;letter-spacing:-.5px}
@@ -126,6 +127,12 @@
   .bar{height:6px;border-radius:5px;background:#eef0f3;overflow:hidden;min-width:64px}
   .bar>span{display:block;height:100%;border-radius:5px}
   .pjnames{color:var(--sub);font-size:11.5px}
+  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;line-height:1;
+    padding:4px 8px 3px;border-radius:7px;white-space:nowrap}
+  .chip i{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7;flex:0 0 5px}
+  .chipdot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:7px;vertical-align:baseline}
+  .pcarddot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px;flex:0 0 8px}
   .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px}
   .badge.red{color:var(--red);background:var(--red-soft)} .badge.amber{color:var(--amber);background:var(--amber-soft)}
   .badge.green{color:var(--green);background:var(--green-soft)}
@@ -214,7 +221,7 @@
 
   <div id="app" style="display:none">
     <aside class="sidebar">
-      <div class="brand" id="brandHome" title="처음 화면으로"><div class="mark">참</div><div><div class="name">참여율 관리</div><div class="sub">ALLOCATION</div></div></div>
+      <div class="brand" id="brandHome" title="처음 화면으로"><div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20a1 1 0 0 0 1 1H10v-5.5h4V21h3.5a1 1 0 0 0 1-1V9.5"/></svg></div><div><div class="name">참여율 관리</div><div class="sub">ALLOCATION</div></div></div>
       <nav class="nav">
         <button class="navitem active" id="navHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>전체 현황</button>
         <button class="navitem" id="navCand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>투입 후보</button>
@@ -342,7 +349,7 @@ function renderProjectCards(){
     +`<div class="pcard-label">총 인원</div><div class="pcard-big">${NAMES.length}<span class="unit">명</span></div>`
     +`<div class="pcard-foot"><span class="fx"><i class="pd red"></i>초과 ${over}</span><span class="fx"><i class="pd amber"></i>100% ${full}</span></div></div>`;
   for(const pj of PROJECTS){ const s=st[pj.name];
-    h+=`<div class="pcard ${projectFilter===pj.name?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name">${pj.name}</span><span class="pcard-badge">2026</span></div>`
+    h+=`<div class="pcard ${projectFilter===pj.name?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name"><i class="pcarddot" style="background:${projColor(pj.name).fg}"></i>${pj.name}</span><span class="pcard-badge">2026</span></div>`
       +`<div class="pcard-label">참여 인원</div><div class="pcard-big">${s.cnt}<span class="unit">명</span></div>`
       +`<div class="pcard-foot"><span>평균 ${s.avg}%</span><span class="fx">신규 ${s.nw}명</span></div></div>`;
   }
@@ -352,6 +359,16 @@ function renderProjectCards(){
 function scopeNames(){ return projectFilter ? NAMES.filter(n=> INDEX[n].some(e=>e.project===projectFilter)) : NAMES.slice(); }
 function isNewIn(name){ const es=INDEX[name]; if(projectFilter){ const e=es.find(x=>x.project===projectFilter); return !!(e&&e.isNew); } return es.some(e=>e.isNew); }
 function teamOf(n){ const e=EMPLOYEES[n]; return e?e.team:""; }
+const PALETTE=[
+  {bg:"#eef0fe",fg:"#4f46e5"},{bg:"#f3e8ff",fg:"#7c3aed"},{bg:"#e0f2fe",fg:"#0369a1"},
+  {bg:"#cffafe",fg:"#0e7490"},{bg:"#dcfce7",fg:"#047857"},{bg:"#ecfccb",fg:"#4d7c0f"},
+  {bg:"#fef3c7",fg:"#b45309"},{bg:"#ffedd5",fg:"#c2410c"},{bg:"#ffe4e6",fg:"#be123c"},
+  {bg:"#fce7f3",fg:"#be185d"},{bg:"#e2e8f0",fg:"#475569"}];
+function projColor(name){ const i=PROJECTS.findIndex(p=>p.name===name); return PALETTE[(i<0?0:i)%PALETTE.length]; }
+function chipsHtml(names){
+  return `<div class="chips">`+names.map(n=>{ const c=projColor(n);
+    return `<span class="chip" style="background:${c.bg};color:${c.fg}"><i></i>${n}</span>`; }).join("")+`</div>`;
+}
 function candidates(){
   return Object.keys(EMPLOYEES).filter(n=>EMPLOYEES[n].team!=="인사총무팀").map(n=>{
     const load = INDEX[n]?peakOf(strip(INDEX[n])).mx:0;
@@ -401,7 +418,7 @@ function cardView(name){
   html+=summaryLine(mx,mi,rem);
   html+=`<table class="pj">`;
   for(const e of entries.slice().sort((a,b)=>b.s[0][0]-a.s[0][0])){
-    html+=`<tr><td>${e.project}<div class="rl">${e.role}${e.isNew?" · 신규":""}`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div></td><td class="p">${segText(e.s)}</td></tr>`;
+    html+=`<tr><td><span class="chipdot" style="background:${projColor(e.project).fg}"></span>${e.project}<div class="rl">${e.role}${e.isNew?" · 신규":""}`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div></td><td class="p">${segText(e.s)}</td></tr>`;
   }
   html+=`</table>`+stripHtml(m)+`<div class="legend">칸 = 그 달의 전체 과제 합산 참여율 (초록 여유 · 노랑 100% 근접 · 빨강 초과)</div></div>`;
   return html;
@@ -439,7 +456,7 @@ function renderList(){
     const badge = pk>100.0001?`<span class="badge red">초과</span>`:(pk>=99.999?`<span class="badge amber">100%</span>`:`<span class="badge green">여유</span>`);
     const barc = pk>100.0001?"var(--red)":(pk>=99.999?"var(--amber)":"var(--green)");
     const pjs=[...new Set(INDEX[r.n].map(x=>x.project))];
-    h+=`<tr data-n="${r.n}"><td><b>${r.n}</b>${isNewIn(r.n)?' <span class="newbadge">NEW</span>':''}<div class="teamsub">${teamOf(r.n)||"—"}</div></td><td><span class="pjnames">${pjs.join(", ")}</span></td>`
+    h+=`<tr data-n="${r.n}"><td><b>${r.n}</b>${isNewIn(r.n)?' <span class="newbadge">NEW</span>':''}<div class="teamsub">${teamOf(r.n)||"—"}</div></td><td>${chipsHtml(pjs)}</td>`
       +`<td class="r ${pk>100.0001?'over':(pk>=99.999?'full':'')}">${pk}%</td>`
       +`<td class="barcol"><div class="bar"><span style="width:${Math.min(100,pk)}%;background:${barc}"></span></div></td>`
       +`<td class="r">${rem<0?`<span class="over">${rem}%</span>`:rem+"%"}</td><td class="r">${badge}</td></tr>`;
