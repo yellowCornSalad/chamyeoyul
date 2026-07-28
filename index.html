@@ -187,6 +187,26 @@
   .savebtn:hover{background:var(--accent-d)}
   .cancelbtn{font-size:13px;color:var(--ink2);background:#f1f2f5;border:none;border-radius:9px;padding:9px 15px;cursor:pointer}
   .savemsg{color:var(--sub);font-size:12px}
+  .projdel{margin-left:8px;border:none;background:#fee2e2;color:#b91c1c;font-size:10.5px;font-weight:700;
+    border-radius:6px;padding:3px 8px;cursor:pointer;vertical-align:middle}
+  .projdel:hover{background:#fecaca}
+  .addbox{margin-top:14px;padding:13px 14px;border:1.5px dashed #d7dae1;border-radius:12px;background:#fbfbfd}
+  .addtitle{font-size:12.5px;font-weight:800;color:var(--ink2);margin-bottom:9px}
+  .addhint{color:var(--muted);font-size:11.5px;margin-top:7px}
+  .addbtn{border:none;background:var(--accent);color:#fff;font-size:12.5px;font-weight:700;border-radius:8px;
+    padding:7px 15px;cursor:pointer;margin-left:2px}
+  .addbtn:hover{background:var(--accent-d)}
+  .chkwrap{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);cursor:pointer;margin-left:2px}
+  .chkwrap input{cursor:pointer}
+  .pcard.addcard{border:1.5px dashed #d3d6de;background:#fafbfc;box-shadow:none;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:5px;color:var(--sub);min-height:132px}
+  .pcard.addcard:hover{border-color:var(--accent);color:var(--accent-d);background:#f8f9ff}
+  .pcard.addcard .plus{font-size:24px;line-height:1;font-weight:400}
+  .pcard.addcard .lbl{font-size:12.5px;font-weight:700}
+  .newprojbox{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 14px;box-shadow:var(--shadow)}
+  .newprojbox .segrow{margin:0}
+  .npinput{padding:8px 11px;font-size:13.5px;border:1.5px solid var(--line);border-radius:9px;outline:none;min-width:220px}
+  .npinput:focus{border-color:var(--accent)}
   .teamsub{color:var(--sub);font-size:11px;margin-top:1px;font-weight:400}
   .cardteam{color:var(--sub);font-size:12.5px;margin:-2px 0 8px}
   .ptable tr[data-cn]:hover td{background:#f8f9fc}
@@ -242,6 +262,15 @@
       </div>
       <div class="cardscroll" id="projCards"></div>
       <div class="hint" id="hintline">카드를 누르면 해당 과제 인원만 볼 수 있어요.</div>
+      <div class="newprojbox" id="newProjBox" style="display:none">
+        <div class="addtitle">새 과제 추가</div>
+        <div class="segrow">
+          <input class="npinput" id="npName" type="text" placeholder="과제명 (예: 차세대 보안관제)" autocomplete="off">
+          <button class="addbtn" id="npAdd">추가</button>
+          <button class="cancelbtn" id="npCancel">취소</button>
+        </div>
+        <div class="addhint">추가하면 바로 저장돼요. 인원은 각자 상세 화면의 “과제에 추가”로 넣습니다.</div>
+      </div>
       <section class="panel">
         <div class="panelhead">
           <div><h2>인원 목록</h2><div class="panelsub" id="listsub"></div></div>
@@ -353,11 +382,15 @@ function renderProjectCards(){
       +`<div class="pcard-label">참여 인원</div><div class="pcard-big">${s.cnt}<span class="unit">명</span></div>`
       +`<div class="pcard-foot"><span>평균 ${s.avg}%</span><span class="fx">신규 ${s.nw}명</span></div></div>`;
   }
+  h+=`<div class="pcard addcard" id="addProjCard"><span class="plus">+</span><span class="lbl">새 과제 추가</span></div>`;
   projCardsEl.innerHTML=h;
-  projCardsEl.querySelectorAll(".pcard").forEach(c=> c.onclick=()=>{ projectFilter=c.dataset.proj||null; selected=null; editing=null; render(); });
+  projCardsEl.querySelectorAll(".pcard[data-proj]").forEach(c=> c.onclick=()=>{ projectFilter=c.dataset.proj||null; selected=null; editing=null; render(); });
+  const ap=document.getElementById("addProjCard");
+  if(ap) ap.onclick=()=>{ const box=document.getElementById("newProjBox");
+    box.style.display=""; document.getElementById("npName").value=""; document.getElementById("npName").focus(); };
 }
 function scopeNames(){ return projectFilter ? NAMES.filter(n=> INDEX[n].some(e=>e.project===projectFilter)) : NAMES.slice(); }
-function isNewIn(name){ const es=INDEX[name]; if(projectFilter){ const e=es.find(x=>x.project===projectFilter); return !!(e&&e.isNew); } return es.some(e=>e.isNew); }
+function isNewIn(name){ const es=INDEX[name]||[]; if(projectFilter){ const e=es.find(x=>x.project===projectFilter); return !!(e&&e.isNew); } return es.some(e=>e.isNew); }
 function teamOf(n){ const e=EMPLOYEES[n]; return e?e.team:""; }
 const PALETTE=[
   {bg:"#eef0fe",fg:"#4f46e5"},{bg:"#f3e8ff",fg:"#7c3aed"},{bg:"#e0f2fe",fg:"#0369a1"},
@@ -406,31 +439,38 @@ function stripHtml(m){
   return h+`</div>`;
 }
 function cardView(name){
-  const entries=INDEX[name];
+  const entries=INDEX[name]||[];
   const anyLead=entries.some(e=>e.role==="과제책임자"||e.role==="실무책임자");
   const anyNew=entries.some(e=>e.isNew);
   const m=strip(entries); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
   let html=`<div class="card"><h2>${name}`;
   if(anyLead) html+=` <span class="tag lead">책임급</span>`;
   if(anyNew) html+=` <span class="tag new">신규</span>`;
-  html+=`<button class="editbtn" data-edit="${name}">수정</button></h2>`;
+  html+=`<button class="editbtn" data-edit="${name}">${entries.length?"수정":"과제에 투입"}</button></h2>`;
   if(teamOf(name)) html+=`<div class="cardteam">${teamOf(name)}</div>`;
   html+=summaryLine(mx,mi,rem);
-  html+=`<table class="pj">`;
-  for(const e of entries.slice().sort((a,b)=>b.s[0][0]-a.s[0][0])){
-    html+=`<tr><td><span class="chipdot" style="background:${projColor(e.project).fg}"></span>${e.project}<div class="rl">${e.role}${e.isNew?" · 신규":""}`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div></td><td class="p">${segText(e.s)}</td></tr>`;
+  if(!entries.length){
+    html+=`<div class="editnote">현재 참여 중인 과제가 없습니다. <b>“과제에 투입”</b>을 눌러 과제와 참여율을 지정하세요.</div>`;
+  }else{
+    html+=`<table class="pj">`;
+    for(const e of entries.slice().sort((a,b)=>b.s[0][0]-a.s[0][0])){
+      html+=`<tr><td><span class="chipdot" style="background:${projColor(e.project).fg}"></span>${e.project}<div class="rl">${e.role}${e.isNew?" · 신규":""}`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div></td><td class="p">${segText(e.s)}</td></tr>`;
+    }
+    html+=`</table>`;
   }
-  html+=`</table>`+stripHtml(m)+`<div class="legend">칸 = 그 달의 전체 과제 합산 참여율 (초록 여유 · 노랑 100% 근접 · 빨강 초과)</div></div>`;
+  html+=stripHtml(m)+`<div class="legend">칸 = 그 달의 전체 과제 합산 참여율 (초록 여유 · 노랑 100% 근접 · 빨강 초과)</div></div>`;
   return html;
 }
 function monOpts(sel){ let o=""; for(let i=1;i<=12;i++) o+=`<option value="${i}"${i===sel?" selected":""}>${i}</option>`; return o; }
 function cardEdit(name){
-  const entries=INDEX[name];
+  const entries=INDEX[name]||[];
   const m=strip(entries); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
   let html=`<div class="card"><h2>${name} <span class="tag lead">수정 중</span></h2>`;
-  html+=`<div class="editnote">참여율(%)과 기간(월)을 바꾸면 아래 합계·월별이 바로 갱신돼요. “+ 기간 추가”로 구간을 나누고, ×로 지웁니다. 저장하면 모든 접속자에게 반영됩니다.</div>`;
+  if(teamOf(name)) html+=`<div class="cardteam">${teamOf(name)}</div>`;
+  html+=`<div class="editnote">참여율(%)·기간(월)을 바꾸면 아래 합계가 바로 갱신돼요. 아래 <b>“과제에 추가”</b>로 새 과제에 투입할 수 있고, 각 과제의 <b>제외</b>로 뺄 수 있어요. <b>저장</b>을 눌러야 반영됩니다.</div>`;
   entries.forEach((e,ei)=>{
-    html+=`<div class="ejrow"><div class="ejhead">${e.project} <span class="rl">${e.role}${e.isNew?" · 신규":""}</span>`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div>`;
+    html+=`<div class="ejrow"><div class="ejhead"><span class="chipdot" style="background:${projColor(e.project).fg}"></span>${e.project} <span class="rl">${e.role}${e.isNew?" · 신규":""}</span>`+(e.note?` <span class="nt">· ${e.note}</span>`:``)
+      +`<button class="projdel" data-proj="${e.project}" title="이 과제에서 제외">제외</button></div>`;
     e.s.forEach((seg,si)=>{
       html+=`<div class="segrow"><input class="rateinp" type="number" min="0" max="100" step="0.1" value="${seg[0]}" data-ei="${ei}" data-si="${si}"><span class="segunit">%</span>`
         +`<select class="moninp" data-ei="${ei}" data-si="${si}" data-k="1">${monOpts(seg[1])}</select><span class="segunit">월 ~</span>`
@@ -439,6 +479,19 @@ function cardEdit(name){
     });
     html+=`<button class="segadd" data-ei="${ei}">+ 기간 추가</button></div>`;
   });
+  const already=new Set(entries.map(e=>e.project));
+  const addable=PROJECTS.filter(p=>!already.has(p.name));
+  if(addable.length){
+    html+=`<div class="addbox"><div class="addtitle">과제에 추가</div><div class="segrow">`
+      +`<select class="moninp" id="addProj">${addable.map(p=>`<option value="${p.name}">${p.name}</option>`).join("")}</select>`
+      +`<select class="moninp" id="addRole"><option>참여연구원</option><option>실무책임자</option><option>과제책임자</option></select>`
+      +`<input class="rateinp" id="addRate" type="number" min="0" max="100" step="0.1" value="0"><span class="segunit">%</span>`
+      +`<select class="moninp" id="addFrom">${monOpts(1)}</select><span class="segunit">월 ~</span>`
+      +`<select class="moninp" id="addTo">${monOpts(12)}</select><span class="segunit">월</span>`
+      +`<label class="chkwrap"><input type="checkbox" id="addNew" checked> 신규</label>`
+      +`<button class="addbtn" id="doAdd">추가</button></div>`
+      +`<div class="addhint">여유 <b>${rem}%</b> — 이보다 크게 넣으면 100%를 넘어요.</div></div>`;
+  }
   html+=`<div id="editSummary">${summaryLine(mx,mi,rem)}${stripHtml(m)}</div>`;
   html+=`<div class="editactions"><button class="savebtn" data-save="${name}">저장</button><button class="cancelbtn" data-cancel="${name}">취소</button><span id="saveMsg" class="savemsg"></span></div></div>`;
   return html;
@@ -489,15 +542,23 @@ function renderCandList(){
   }
   out.innerHTML=h+`</tbody></table>`;
   out.querySelectorAll("tr[data-cn]").forEach(tr=>{ const n=tr.dataset.cn;
-    if(INDEX[n]) tr.onclick=()=>{ view="main"; selected=n; projectFilter=null; statusFilter="all"; render(); window.scrollTo(0,0); };
-    else tr.style.cursor="default"; });
+    tr.onclick=()=>{ view="main"; selected=n; projectFilter=null; statusFilter="all"; q.value=""; render(); window.scrollTo(0,0); }; });
 }
 function render(){
   if(!PROJECTS) return;
   toggleClear();
   const cand = view==="candidates";
   document.getElementById("projCards").style.display = cand?"none":"";
-  document.getElementById("hintline").style.display = cand?"none":"";
+  const hl=document.getElementById("hintline");
+  hl.style.display = cand?"none":"";
+  if(!cand){
+    const pj=projectFilter?PROJECTS.find(p=>p.name===projectFilter):null;
+    if(pj && !pj.people.length){
+      hl.innerHTML=`“${projectFilter}” 과제에 아직 인원이 없어요. 인원 상세 화면의 “과제에 추가”로 넣으세요. <button class="projdel" id="delProjBtn">이 과제 삭제</button>`;
+      const db=document.getElementById("delProjBtn"); if(db) db.onclick=(ev)=>{ ev.stopPropagation(); deleteProject(projectFilter); };
+    } else hl.textContent="카드를 누르면 해당 과제 인원만 볼 수 있어요.";
+  }
+  if(cand) document.getElementById("newProjBox").style.display="none";
   document.querySelector(".panelhead h2").textContent = cand?"투입 후보":"인원 목록";
   document.getElementById("navHome").classList.toggle("active", !cand);
   document.getElementById("navCand").classList.toggle("active", cand);
@@ -521,25 +582,74 @@ function attachCardHandlers(){
     const e=INDEX[editing][+b.dataset.ei]; if(e.s.length>1) e.s.splice(+b.dataset.si,1); else e.s[0][0]=0; renderList(); });
   out.querySelectorAll(".segadd").forEach(b=> b.onclick=()=>{
     const e=INDEX[editing][+b.dataset.ei], last=e.s[e.s.length-1]; e.s.push([0, last?Math.min(12,last[2]+1):1, 12]); renderList(); });
+  out.querySelectorAll(".projdel").forEach(b=> b.onclick=()=>{
+    const pname=b.dataset.proj, pj=PROJECTS.find(p=>p.name===pname);
+    if(!pj) return;
+    pj.people = pj.people.filter(p=>p.n!==editing);
+    buildIndex(); render(); toast(`${pname}에서 제외했어요. “저장”을 눌러야 반영됩니다.`); });
+  const da=document.getElementById("doAdd");
+  if(da) da.onclick=()=>{
+    const pname=document.getElementById("addProj").value;
+    const role=document.getElementById("addRole").value;
+    let rate=parseFloat(document.getElementById("addRate").value); if(isNaN(rate)||rate<0) rate=0; if(rate>100) rate=100;
+    const from=parseInt(document.getElementById("addFrom").value,10), to=parseInt(document.getElementById("addTo").value,10);
+    if(to<from){ toast("끝 월이 시작 월보다 빠릅니다."); return; }
+    const pj=PROJECTS.find(p=>p.name===pname); if(!pj) return;
+    if(pj.people.some(p=>p.n===editing)){ toast("이미 그 과제에 있습니다."); return; }
+    pj.people.push({n:editing, r:role, isNew:document.getElementById("addNew").checked, s:[[rate,from,to]]});
+    buildIndex(); render(); toast(`${pname}에 ${rate}% 추가했어요. “저장”을 눌러야 반영됩니다.`);
+  };
 }
 function refreshEditSummary(){
-  const m=strip(INDEX[editing]); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
+  const m=strip(INDEX[editing]||[]); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
   const el=document.getElementById("editSummary"); if(el) el.innerHTML=summaryLine(mx,mi,rem)+stripHtml(m);
 }
-function enterEdit(name){ editing=name; selected=name; editBackup=INDEX[name].map(e=>e.s.map(seg=>seg.slice())); renderList(); }
+function enterEdit(name){ editing=name; selected=name; editBackup=JSON.parse(JSON.stringify(PROJECTS)); renderList(); }
 function cancelEdit(name){
-  if(editBackup) INDEX[name].forEach((e,ei)=>{ e.s.length=0; editBackup[ei].forEach(seg=>e.s.push(seg.slice())); });
-  editing=null; editBackup=null; renderList();
+  if(editBackup){ PROJECTS=editBackup; buildIndex(); }
+  editing=null; editBackup=null; render();
+}
+async function saveProjects(successMsg){
+  const rows=await sbLatest(1); const latestId=rows[0]?rows[0].id:null;
+  if(latestId!==loadedVersionId){
+    editing=null; editBackup=null; await reloadFromSb();
+    toast("다른 사람이 먼저 수정했어요. 최신 내용을 불러왔습니다 — 다시 시도해 주세요."); return false; }
+  const blob=await encryptProjects(PROJECTS, sessionPassword);
+  const ins=await sbInsert(blob); loadedVersionId=ins.id;
+  toast(successMsg||"저장됐습니다. 모든 접속자에게 반영됩니다."); return true;
 }
 async function saveEdit(name){
   const msg=document.getElementById("saveMsg"); if(msg) msg.textContent="저장 중...";
   try{
-    const rows=await sbLatest(1); const latestId=rows[0]?rows[0].id:null;
-    if(latestId!==loadedVersionId){ editing=null; editBackup=null; await reloadFromSb(); toast("다른 사람이 먼저 수정했어요. 최신 내용을 불러왔습니다 — 다시 시도해 주세요."); return; }
-    const blob=await encryptProjects(PROJECTS, sessionPassword);
-    const ins=await sbInsert(blob); loadedVersionId=ins.id;
-    editing=null; editBackup=null; render(); toast("저장됐습니다. 모든 접속자에게 반영됩니다.");
+    const ok=await saveProjects("저장됐습니다. 모든 접속자에게 반영됩니다.");
+    if(ok){ editing=null; editBackup=null; }
+    render();
   }catch(e){ if(msg) msg.textContent="저장 실패: "+e.message+" (다시 시도)"; }
+}
+async function addProject(){
+  const inp=document.getElementById("npName"); const nm=(inp.value||"").trim();
+  if(!nm){ toast("과제명을 입력하세요."); inp.focus(); return; }
+  if(PROJECTS.some(p=>p.name===nm)){ toast("같은 이름의 과제가 이미 있습니다."); inp.focus(); return; }
+  const snapshot=JSON.parse(JSON.stringify(PROJECTS));
+  PROJECTS.push({name:nm, tag:"", year:2026, people:[]});
+  buildIndex();
+  try{
+    const ok=await saveProjects(`“${nm}” 과제를 추가했어요.`);
+    if(!ok){ PROJECTS=snapshot; buildIndex(); }
+    else { document.getElementById("newProjBox").style.display="none"; projectFilter=nm; }
+  }catch(e){ PROJECTS=snapshot; buildIndex(); toast("저장 실패: "+e.message); }
+  render();
+}
+async function deleteProject(nm){
+  const pj=PROJECTS.find(p=>p.name===nm); if(!pj) return;
+  if(pj.people.length){ toast("인원이 있는 과제는 삭제할 수 없어요. 먼저 인원을 제외하세요."); return; }
+  const snapshot=JSON.parse(JSON.stringify(PROJECTS));
+  PROJECTS=PROJECTS.filter(p=>p.name!==nm); buildIndex(); projectFilter=null;
+  try{
+    const ok=await saveProjects(`“${nm}” 과제를 삭제했어요.`);
+    if(!ok){ PROJECTS=snapshot; buildIndex(); }
+  }catch(e){ PROJECTS=snapshot; buildIndex(); toast("삭제 실패: "+e.message); }
+  render();
 }
 async function reloadFromSb(){ const data=await loadData(sessionPassword); PROJECTS=data.projects; loadedVersionId=data.versionId; buildIndex(); render(); }
 
@@ -555,7 +665,7 @@ function toast(m){ let t=document.getElementById("toast"); if(!t){t=document.cre
 
 /* ===== 내비게이션 ===== */
 function toggleClear(){ const c=document.getElementById("qclear"); if(c) c.style.display=q.value?"":"none"; }
-function restoreIfEditing(){ if(editing&&editBackup) INDEX[editing].forEach((e,ei)=>{ e.s.length=0; editBackup[ei].forEach(seg=>e.s.push(seg.slice())); }); editing=null; editBackup=null; }
+function restoreIfEditing(){ if(editing&&editBackup){ PROJECTS=editBackup; buildIndex(); } editing=null; editBackup=null; }
 function backToList(){ restoreIfEditing(); selected=null; render(); window.scrollTo(0,0); }
 function goHome(){ restoreIfEditing(); view="main"; selected=null; projectFilter=null; statusFilter="all"; q.value=""; render(); window.scrollTo(0,0); }
 function clearSearch(){ q.value=""; selected=null; render(); }
@@ -662,6 +772,9 @@ document.getElementById("brandHome").addEventListener("click", goHome);
 document.getElementById("navHome").addEventListener("click", goHome);
 document.getElementById("navCand").addEventListener("click", ()=>{ view="candidates"; selected=null; editing=null; candStatusFilter="all"; q.value=""; render(); window.scrollTo(0,0); });
 document.getElementById("navXlsx").addEventListener("click", downloadXlsx);
+document.getElementById("npAdd").addEventListener("click", addProject);
+document.getElementById("npCancel").addEventListener("click", ()=>{ document.getElementById("newProjBox").style.display="none"; });
+document.getElementById("npName").addEventListener("keydown", e=>{ if(e.key==="Enter") addProject(); if(e.key==="Escape") document.getElementById("newProjBox").style.display="none"; });
 document.getElementById("pw").focus();
 </script>
 </body>
