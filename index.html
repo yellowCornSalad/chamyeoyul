@@ -39,7 +39,9 @@
   #app{display:flex;align-items:stretch;min-height:100vh}
   .sidebar{position:sticky;top:0;height:100vh;flex:0 0 236px;width:236px;background:var(--sidebar);
     border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:6px}
-  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px;cursor:pointer;border-radius:12px;transition:opacity .12s}
+  .brand:hover{opacity:.7}
+  .brand:active{opacity:.55}
   .brand .name{font-weight:800;font-size:15px;letter-spacing:-.2px}
   .brand .sub{font-size:11px;color:var(--muted);letter-spacing:.4px}
   .nav{display:flex;flex-direction:column;gap:3px}
@@ -212,7 +214,7 @@
 
   <div id="app" style="display:none">
     <aside class="sidebar">
-      <div class="brand"><div class="mark">참</div><div><div class="name">참여율 관리</div><div class="sub">ALLOCATION</div></div></div>
+      <div class="brand" id="brandHome" title="처음 화면으로"><div class="mark">참</div><div><div class="name">참여율 관리</div><div class="sub">ALLOCATION</div></div></div>
       <nav class="nav">
         <button class="navitem active" id="navHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>전체 현황</button>
         <button class="navitem" id="navCand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>투입 후보</button>
@@ -639,6 +641,7 @@ q.addEventListener("input", ()=>{ selected=null; render(); });
 q.addEventListener("keydown", e=>{ if(e.key==="Escape") clearSearch(); });
 document.getElementById("qclear").addEventListener("click", clearSearch);
 document.getElementById("homeTitle").addEventListener("click", goHome);
+document.getElementById("brandHome").addEventListener("click", goHome);
 document.getElementById("navHome").addEventListener("click", goHome);
 document.getElementById("navCand").addEventListener("click", ()=>{ view="candidates"; selected=null; editing=null; candStatusFilter="all"; q.value=""; render(); window.scrollTo(0,0); });
 document.getElementById("navXlsx").addEventListener("click", downloadXlsx);
