@@ -96,6 +96,10 @@
   .panelhead{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;padding:16px 16px 12px;flex-wrap:wrap}
   .panelhead h2{font-size:16px;margin:0}
   .panelsub{color:var(--sub);font-size:12px;margin-top:3px}
+  .headctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .minisel{padding:9px 10px;font-size:12.5px;font-weight:600;color:var(--ink2);border:1.5px solid var(--line);
+    border-radius:10px;background:#fff;outline:none;cursor:pointer;max-width:170px}
+  .minisel:focus{border-color:var(--accent)}
   .searchwrap{position:relative}
   #q{width:230px;max-width:52vw;padding:9px 34px 9px 13px;font-size:13.5px;border:1.5px solid var(--line);border-radius:11px;outline:none;background:#fff}
   #q:focus{border-color:var(--accent)}
@@ -295,7 +299,11 @@
       <section class="panel">
         <div class="panelhead">
           <div><h2>인원 목록</h2><div class="panelsub" id="listsub"></div></div>
-          <div class="searchwrap"><input id="q" type="text" placeholder="이름 검색" autocomplete="off"><button id="qclear" class="qclear" title="지우기" style="display:none">×</button></div>
+          <div class="headctl">
+            <select id="teamSel" class="minisel" title="팀 필터"></select>
+            <select id="sortSel" class="minisel" title="정렬"></select>
+            <div class="searchwrap"><input id="q" type="text" placeholder="이름 검색" autocomplete="off"><button id="qclear" class="qclear" title="지우기" style="display:none">×</button></div>
+          </div>
         </div>
         <div class="pills" id="pills"></div>
         <div id="out"></div>
@@ -316,6 +324,7 @@ let PROJECTS=null, INDEX={}, NAMES=[];
 let sessionPassword=null, loadedVersionId=null, editing=null, editBackup=null;
 let selected=null, projectFilter=null, statusFilter="all";
 let EMPLOYEES={}, view="main", candStatusFilter="all";
+let teamFilter="", sortKey="team", candSortKey="avail";
 
 /* ===== 암호화 ===== */
 function b64ToBytes(s){ return Uint8Array.from(atob(s), c=>c.charCodeAt(0)); }
@@ -436,14 +445,38 @@ function renderPills(){
   pillsEl.innerHTML = P("all","전체","",scope.length)+P("room","여유","green",room)+P("full","100% 도달","amber",full)+P("over","초과","red",over);
   pillsEl.querySelectorAll(".pill").forEach(b=> b.onclick=()=>{ statusFilter=b.dataset.status; selected=null; pushView(); render(); });
 }
+const CMP_MAIN={
+  team:(a,b)=> (teamOf(a.n)||"힣").localeCompare(teamOf(b.n)||"힣") || b.mx-a.mx || a.n.localeCompare(b.n),
+  load:(a,b)=> b.mx-a.mx || a.n.localeCompare(b.n),
+  name:(a,b)=> a.n.localeCompare(b.n)
+};
+const CMP_CAND={
+  avail:(a,b)=> b.avail-a.avail || a.team.localeCompare(b.team) || a.n.localeCompare(b.n),
+  team:(a,b)=> a.team.localeCompare(b.team) || b.avail-a.avail || a.n.localeCompare(b.n),
+  name:(a,b)=> a.n.localeCompare(b.n)
+};
+function renderControls(){
+  const cand=view==="candidates";
+  const pool = cand ? candidates().map(c=>c.team) : scopeNames().map(n=>teamOf(n));
+  const teams=[...new Set(pool.filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const tsel=document.getElementById("teamSel");
+  tsel.innerHTML=`<option value="">전체 팀</option>`
+    + teams.map(t=>`<option value="${t}"${teamFilter===t?" selected":""}>${t}</option>`).join("");
+  const ssel=document.getElementById("sortSel");
+  const opts = cand ? [["avail","여유 많은순"],["team","팀 이름순"],["name","이름순"]]
+                    : [["team","팀 이름순"],["load","참여율 높은순"],["name","이름순"]];
+  const cur = cand?candSortKey:sortKey;
+  ssel.innerHTML=opts.map(([v,l])=>`<option value="${v}"${cur===v?" selected":""}>${l}</option>`).join("");
+}
 function personList(){
   let names=scopeNames();
   const term=q.value.trim(); if(term) names=names.filter(n=>n.includes(term));
+  if(teamFilter) names=names.filter(n=>teamOf(n)===teamFilter);
   let rows=names.map(n=>{ const {mx}=peakOf(strip(INDEX[n])); return {n,mx}; });
   if(statusFilter==="over") rows=rows.filter(r=>r.mx>100.0001);
   else if(statusFilter==="full") rows=rows.filter(r=>r.mx>=99.999&&r.mx<=100.0001);
   else if(statusFilter==="room") rows=rows.filter(r=>r.mx<99.999);
-  rows.sort((a,b)=> (teamOf(a.n)||"힣").localeCompare(teamOf(b.n)||"힣") || b.mx-a.mx || a.n.localeCompare(b.n));
+  rows.sort(CMP_MAIN[sortKey]||CMP_MAIN.team);
   return rows;
 }
 
@@ -525,7 +558,7 @@ function renderList(){
   if(selected){ listsub.textContent=`${selected}${teamOf(selected)?" · "+teamOf(selected):""}`;
     out.innerHTML=BACKBAR+cardView(selected); attachCardHandlers(); return; }
   const rows=personList();
-  listsub.textContent = `${projectFilter||"전체"} · ${rows.length}명`;
+  listsub.textContent = `${projectFilter||"전체"}${teamFilter?" · "+teamFilter:""} · ${rows.length}명`;
   if(!rows.length){ out.innerHTML=`<div class="empty">조건에 맞는 인원이 없어요.</div>`; return; }
   let h=`<table class="ptable"><thead><tr><th>이름</th><th>참여 과제</th><th class="r">최대</th><th class="barcol">부하</th><th class="r">잔여</th><th class="r">상태</th></tr></thead><tbody>`;
   for(const r of rows){
@@ -553,8 +586,9 @@ function renderCandList(){
   if(candStatusFilter==="free") rows=rows.filter(c=>c.load===0);
   else if(candStatusFilter==="partial") rows=rows.filter(c=>c.load>0);
   const term=q.value.trim(); if(term) rows=rows.filter(c=>c.n.includes(term)||c.team.includes(term));
-  rows.sort((a,b)=> b.avail-a.avail || a.team.localeCompare(b.team) || a.n.localeCompare(b.n));
-  listsub.textContent = `인사총무팀 제외 · 여유 인력 ${rows.length}명`;
+  if(teamFilter) rows=rows.filter(c=>c.team===teamFilter);
+  rows.sort(CMP_CAND[candSortKey]||CMP_CAND.avail);
+  listsub.textContent = `${teamFilter||"인사총무팀 제외"} · 여유 인력 ${rows.length}명`;
   if(!rows.length){ out.innerHTML=`<div class="empty">조건에 맞는 후보가 없어요.</div>`; return; }
   let h=`<table class="ptable"><thead><tr><th>이름</th><th>팀</th><th class="r">현재 참여</th><th class="barcol">여력</th><th class="r">추가 가능</th><th class="r">상태</th></tr></thead><tbody>`;
   for(const c of rows){
@@ -587,6 +621,7 @@ function render(){
   document.getElementById("navHome").classList.toggle("active", !cand);
   document.getElementById("navCand").classList.toggle("active", cand);
   q.placeholder = cand?"이름·팀 검색":"이름 검색";
+  renderControls();
   if(cand){ renderCandPills(); renderCandList(); }
   else { renderProjectCards(); renderPills(); renderList(); }
 }
@@ -766,7 +801,7 @@ function toast(m){ let t=document.getElementById("toast"); if(!t){t=document.cre
 
 /* ===== 내비게이션 ===== */
 let suppressPush=false;
-function snapView(){ return {view, projectFilter, statusFilter, candStatusFilter, selected, term:q.value}; }
+function snapView(){ return {view, projectFilter, statusFilter, candStatusFilter, selected, term:q.value, teamFilter, sortKey, candSortKey}; }
 function pushView(){ if(suppressPush) return; try{ history.pushState(snapView(), ""); }catch(e){} }
 function syncView(){ if(suppressPush) return; try{ history.replaceState(snapView(), ""); }catch(e){} }
 window.addEventListener("popstate", e=>{
@@ -774,14 +809,15 @@ window.addEventListener("popstate", e=>{
   restoreIfEditing();
   const st=e.state;
   if(st){ view=st.view||"main"; projectFilter=st.projectFilter||null; statusFilter=st.statusFilter||"all";
-    candStatusFilter=st.candStatusFilter||"all"; selected=st.selected||null; q.value=st.term||""; }
-  else { view="main"; projectFilter=null; statusFilter="all"; candStatusFilter="all"; selected=null; q.value=""; }
+    candStatusFilter=st.candStatusFilter||"all"; selected=st.selected||null; q.value=st.term||"";
+    teamFilter=st.teamFilter||""; sortKey=st.sortKey||"team"; candSortKey=st.candSortKey||"avail"; }
+  else { view="main"; projectFilter=null; statusFilter="all"; candStatusFilter="all"; selected=null; q.value=""; teamFilter=""; }
   suppressPush=true; render(); suppressPush=false; window.scrollTo(0,0);
 });
 function toggleClear(){ const c=document.getElementById("qclear"); if(c) c.style.display=q.value?"":"none"; }
 function restoreIfEditing(){ if(editing&&editBackup){ PROJECTS=editBackup; buildIndex(); } editing=null; editBackup=null; }
 function backToList(){ restoreIfEditing(); selected=null; pushView(); render(); window.scrollTo(0,0); }
-function goHome(){ restoreIfEditing(); view="main"; selected=null; projectFilter=null; statusFilter="all"; q.value=""; pushView(); render(); window.scrollTo(0,0); }
+function goHome(){ restoreIfEditing(); view="main"; selected=null; projectFilter=null; statusFilter="all"; teamFilter=""; q.value=""; pushView(); render(); window.scrollTo(0,0); }
 function clearSearch(){ q.value=""; selected=null; pushView(); render(); }
 
 /* ===== 엑셀(.xlsx) — 과제별 시트, 라이브러리 없이 자체 생성 ===== */
@@ -890,6 +926,10 @@ document.getElementById("npAdd").addEventListener("click", addProject);
 document.getElementById("npCancel").addEventListener("click", ()=>{ document.getElementById("newProjBox").style.display="none"; });
 document.getElementById("npName").addEventListener("keydown", e=>{ if(e.key==="Enter") addProject(); if(e.key==="Escape") document.getElementById("newProjBox").style.display="none"; });
 document.getElementById("histToggle").addEventListener("click", ()=>{ histExpanded=!histExpanded; renderHistory(); });
+document.getElementById("teamSel").addEventListener("change", e=>{ teamFilter=e.target.value; selected=null; pushView(); render(); });
+document.getElementById("sortSel").addEventListener("change", e=>{
+  if(view==="candidates") candSortKey=e.target.value; else sortKey=e.target.value;
+  selected=null; syncView(); render(); });
 document.getElementById("pw").focus();
 </script>
 </body>
