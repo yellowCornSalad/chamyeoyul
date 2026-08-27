@@ -220,6 +220,8 @@
   .histback{border:1px solid var(--line);background:#fff;color:var(--ink2);font-size:11.5px;font-weight:700;
     border-radius:8px;padding:5px 11px;cursor:pointer;white-space:nowrap}
   .histback:hover{border-color:var(--accent);color:var(--accent-d);background:#f8f9ff}
+  .clrsel{margin-left:6px;border:1px solid var(--line);background:#fff;color:var(--accent-d);font-size:11px;font-weight:700;border-radius:7px;padding:3px 9px;cursor:pointer}
+  .clrsel:hover{border-color:var(--accent);background:#f8f9ff}
   .histempty{padding:10px 16px 14px;color:var(--muted);font-size:12px}
   .newprojbox{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 14px;box-shadow:var(--shadow)}
   .newprojbox .segrow{margin:0}
@@ -322,7 +324,7 @@ const TABLE = "participation_versions";
 
 let PROJECTS=null, INDEX={}, NAMES=[];
 let sessionPassword=null, loadedVersionId=null, editing=null, editBackup=null;
-let selected=null, projectFilter=null, statusFilter="all";
+let selected=null, projectFilters=[], statusFilter="all";
 let EMPLOYEES={}, view="main", candStatusFilter="all";
 let teamFilter="", sortKey="team", candSortKey="avail";
 
@@ -404,23 +406,33 @@ function projStats(){
 function renderProjectCards(){
   const st=projStats();
   let over=0,full=0; for(const n of NAMES){ const {mx}=peakOf(strip(INDEX[n])); if(mx>100.0001)over++; else if(mx>=99.999)full++; }
-  let h=`<div class="pcard total ${!projectFilter?'active':''}" data-proj=""><div class="pcard-top"><span class="pcard-name">전체</span><span class="pcard-badge">ALL</span></div>`
+  let h=`<div class="pcard total ${!projectFilters.length?'active':''}" data-proj=""><div class="pcard-top"><span class="pcard-name">전체</span><span class="pcard-badge">ALL</span></div>`
     +`<div class="pcard-label">총 인원</div><div class="pcard-big">${NAMES.length}<span class="unit">명</span></div>`
     +`<div class="pcard-foot"><span class="fx"><i class="pd red"></i>초과 ${over}</span><span class="fx"><i class="pd amber"></i>100% ${full}</span></div></div>`;
   for(const pj of PROJECTS){ const s=st[pj.name];
-    h+=`<div class="pcard ${projectFilter===pj.name?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name"><i class="pcarddot" style="background:${projColor(pj.name).fg}"></i>${pj.name}</span><span class="pcard-badge">2026</span></div>`
+    h+=`<div class="pcard ${projectFilters.includes(pj.name)?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name"><i class="pcarddot" style="background:${projColor(pj.name).fg}"></i>${pj.name}</span><span class="pcard-badge">2026</span></div>`
       +`<div class="pcard-label">참여 인원</div><div class="pcard-big">${s.cnt}<span class="unit">명</span></div>`
       +`<div class="pcard-foot"><span>평균 ${s.avg}%</span><span class="fx">신규 ${s.nw}명</span></div></div>`;
   }
   h+=`<div class="pcard addcard" id="addProjCard"><span class="plus">+</span><span class="lbl">새 과제 추가</span></div>`;
   projCardsEl.innerHTML=h;
-  projCardsEl.querySelectorAll(".pcard[data-proj]").forEach(c=> c.onclick=()=>{ restoreIfEditing(); projectFilter=c.dataset.proj||null; selected=null; pushView(); render(); });
+  projCardsEl.querySelectorAll(".pcard[data-proj]").forEach(c=> c.onclick=(ev)=>{ restoreIfEditing();
+    const nm=c.dataset.proj;
+    if(!nm) projectFilters=[];                                  // '전체' 카드 → 선택 해제
+    else if(projectFilters.includes(nm)) projectFilters=projectFilters.filter(x=>x!==nm);   // 다시 누르면 해제
+    else projectFilters=projectFilters.concat([nm]);            // 누적 선택
+    selected=null; pushView(); render(); });
   const ap=document.getElementById("addProjCard");
   if(ap) ap.onclick=()=>{ const box=document.getElementById("newProjBox");
     box.style.display=""; document.getElementById("npName").value=""; document.getElementById("npName").focus(); };
 }
-function scopeNames(){ return projectFilter ? NAMES.filter(n=> INDEX[n].some(e=>e.project===projectFilter)) : NAMES.slice(); }
-function isNewIn(name){ const es=INDEX[name]||[]; if(projectFilter){ const e=es.find(x=>x.project===projectFilter); return !!(e&&e.isNew); } return es.some(e=>e.isNew); }
+function scopeNames(){ if(!projectFilters.length) return NAMES.slice();
+  return NAMES.filter(n=> (INDEX[n]||[]).some(e=>projectFilters.includes(e.project)) ); }
+function isNewIn(name){ const es=INDEX[name]||[];
+  if(projectFilters.length) return es.some(e=>projectFilters.includes(e.project)&&e.isNew);
+  return es.some(e=>e.isNew); }
+function filterLabel(){ if(!projectFilters.length) return "전체";
+  return projectFilters.length<=2 ? projectFilters.join(" + ") : ("과제 "+projectFilters.length+"개"); }
 function teamOf(n){ const e=EMPLOYEES[n]; return e?e.team:""; }
 const PALETTE=[
   {bg:"#eef0fe",fg:"#4f46e5"},{bg:"#f3e8ff",fg:"#7c3aed"},{bg:"#e0f2fe",fg:"#0369a1"},
@@ -558,7 +570,7 @@ function renderList(){
   if(selected){ listsub.textContent=`${selected}${teamOf(selected)?" · "+teamOf(selected):""}`;
     out.innerHTML=BACKBAR+cardView(selected); attachCardHandlers(); return; }
   const rows=personList();
-  listsub.textContent = `${projectFilter||"전체"}${teamFilter?" · "+teamFilter:""} · ${rows.length}명`;
+  listsub.textContent = `${filterLabel()}${teamFilter?" · "+teamFilter:""} · ${rows.length}명`;
   if(!rows.length){ out.innerHTML=`<div class="empty">조건에 맞는 인원이 없어요.</div>`; return; }
   let h=`<table class="ptable"><thead><tr><th>이름</th><th>참여 과제</th><th class="r">최대</th><th class="barcol">부하</th><th class="r">잔여</th><th class="r">상태</th></tr></thead><tbody>`;
   for(const r of rows){
@@ -600,7 +612,7 @@ function renderCandList(){
   }
   out.innerHTML=h+`</tbody></table>`;
   out.querySelectorAll("tr[data-cn]").forEach(tr=>{ const n=tr.dataset.cn;
-    tr.onclick=()=>{ view="main"; selected=n; projectFilter=null; statusFilter="all"; q.value=""; pushView(); render(); window.scrollTo(0,0); }; });
+    tr.onclick=()=>{ view="main"; selected=n; projectFilters=[]; statusFilter="all"; q.value=""; pushView(); render(); window.scrollTo(0,0); }; });
 }
 function render(){
   if(!PROJECTS) return;
@@ -610,11 +622,14 @@ function render(){
   const hl=document.getElementById("hintline");
   hl.style.display = cand?"none":"";
   if(!cand){
-    const pj=projectFilter?PROJECTS.find(p=>p.name===projectFilter):null;
+    const only=projectFilters.length===1?projectFilters[0]:null;
+    const pj=only?PROJECTS.find(p=>p.name===only):null;
     if(pj && !pj.people.length){
-      hl.innerHTML=`“${projectFilter}” 과제에 아직 인원이 없어요. 인원 상세 화면의 “과제에 추가”로 넣으세요. <button class="projdel" id="delProjBtn">이 과제 삭제</button>`;
-      const db=document.getElementById("delProjBtn"); if(db) db.onclick=(ev)=>{ ev.stopPropagation(); deleteProject(projectFilter); };
-    } else hl.textContent="카드를 누르면 해당 과제 인원만 볼 수 있어요.";
+      hl.innerHTML=`“${only}” 과제에 아직 인원이 없어요. 인원 상세 화면의 “과제에 추가”로 넣으세요. <button class="projdel" id="delProjBtn">이 과제 삭제</button>`;
+      const db=document.getElementById("delProjBtn"); if(db) db.onclick=(ev)=>{ ev.stopPropagation(); deleteProject(only); };
+    } else if(projectFilters.length) hl.innerHTML=`선택한 과제 <b>${projectFilters.length}개</b>에 참여한 인원(중복 제외)입니다. 카드를 다시 누르면 해제돼요. <button class="clrsel" id="clrSelBtn">전체 보기</button>`;
+    else hl.textContent="카드를 누르면 해당 과제 인원만 볼 수 있어요. 여러 개를 눌러 겹쳐 볼 수 있어요.";
+    const cs=document.getElementById("clrSelBtn"); if(cs) cs.onclick=()=>{ projectFilters=[]; selected=null; pushView(); render(); };
   }
   if(cand) document.getElementById("newProjBox").style.display="none";
   document.querySelector(".panelhead h2").textContent = cand?"투입 후보":"인원 목록";
@@ -703,7 +718,7 @@ async function addProject(){
   try{
     const ok=await saveProjects(`“${nm}” 과제를 추가했어요.`);
     if(!ok){ PROJECTS=snapshot; buildIndex(); }
-    else { document.getElementById("newProjBox").style.display="none"; projectFilter=nm; }
+    else { document.getElementById("newProjBox").style.display="none"; projectFilters=[nm]; }
   }catch(e){ PROJECTS=snapshot; buildIndex(); toast("저장 실패: "+e.message); }
   render();
 }
@@ -711,7 +726,7 @@ async function deleteProject(nm){
   const pj=PROJECTS.find(p=>p.name===nm); if(!pj) return;
   if(pj.people.length){ toast("인원이 있는 과제는 삭제할 수 없어요. 먼저 인원을 제외하세요."); return; }
   const snapshot=JSON.parse(JSON.stringify(PROJECTS));
-  PROJECTS=PROJECTS.filter(p=>p.name!==nm); buildIndex(); projectFilter=null;
+  PROJECTS=PROJECTS.filter(p=>p.name!==nm); buildIndex(); projectFilters=[];
   try{
     const ok=await saveProjects(`“${nm}” 과제를 삭제했어요.`);
     if(!ok){ PROJECTS=snapshot; buildIndex(); }
@@ -801,23 +816,23 @@ function toast(m){ let t=document.getElementById("toast"); if(!t){t=document.cre
 
 /* ===== 내비게이션 ===== */
 let suppressPush=false;
-function snapView(){ return {view, projectFilter, statusFilter, candStatusFilter, selected, term:q.value, teamFilter, sortKey, candSortKey}; }
+function snapView(){ return {view, projectFilters:projectFilters.slice(), statusFilter, candStatusFilter, selected, term:q.value, teamFilter, sortKey, candSortKey}; }
 function pushView(){ if(suppressPush) return; try{ history.pushState(snapView(), ""); }catch(e){} }
 function syncView(){ if(suppressPush) return; try{ history.replaceState(snapView(), ""); }catch(e){} }
 window.addEventListener("popstate", e=>{
   if(!PROJECTS) return;
   restoreIfEditing();
   const st=e.state;
-  if(st){ view=st.view||"main"; projectFilter=st.projectFilter||null; statusFilter=st.statusFilter||"all";
+  if(st){ view=st.view||"main"; projectFilters=Array.isArray(st.projectFilters)?st.projectFilters.slice():[]; statusFilter=st.statusFilter||"all";
     candStatusFilter=st.candStatusFilter||"all"; selected=st.selected||null; q.value=st.term||"";
     teamFilter=st.teamFilter||""; sortKey=st.sortKey||"team"; candSortKey=st.candSortKey||"avail"; }
-  else { view="main"; projectFilter=null; statusFilter="all"; candStatusFilter="all"; selected=null; q.value=""; teamFilter=""; }
+  else { view="main"; projectFilters=[]; statusFilter="all"; candStatusFilter="all"; selected=null; q.value=""; teamFilter=""; }
   suppressPush=true; render(); suppressPush=false; window.scrollTo(0,0);
 });
 function toggleClear(){ const c=document.getElementById("qclear"); if(c) c.style.display=q.value?"":"none"; }
 function restoreIfEditing(){ if(editing&&editBackup){ PROJECTS=editBackup; buildIndex(); } editing=null; editBackup=null; }
 function backToList(){ restoreIfEditing(); selected=null; pushView(); render(); window.scrollTo(0,0); }
-function goHome(){ restoreIfEditing(); view="main"; selected=null; projectFilter=null; statusFilter="all"; teamFilter=""; q.value=""; pushView(); render(); window.scrollTo(0,0); }
+function goHome(){ restoreIfEditing(); view="main"; selected=null; projectFilters=[]; statusFilter="all"; teamFilter=""; q.value=""; pushView(); render(); window.scrollTo(0,0); }
 function clearSearch(){ q.value=""; selected=null; pushView(); render(); }
 
 /* ===== 엑셀(.xlsx) — 과제별 시트, 라이브러리 없이 자체 생성 ===== */
