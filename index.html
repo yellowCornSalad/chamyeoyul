@@ -893,10 +893,10 @@ function buildXlsx(sheets){
 }
 function exportSheets(){
   const sheets=[];
-  const ov=[["이름","최대 참여율(%)","잔여(추가가능,%)","참여 과제수","참여 과제"]];
+  const ov=[["이름","상태","최대 참여율(%)","잔여(추가가능,%)","참여 과제수","참여 과제"]];
   NAMES.map(n=>{const e=INDEX[n];const {mx}=peakOf(strip(e));return {n,mx,pjs:[...new Set(e.map(x=>x.project))]};})
     .sort((a,b)=>b.mx-a.mx||a.n.localeCompare(b.n))
-    .forEach(r=>ov.push([r.n,r.mx,r1(100-r.mx),r.pjs.length,r.pjs.join(", ")]));
+    .forEach(r=>ov.push([r.n,isRetired(r.n)?"퇴사":"재직",r.mx,r1(100-r.mx),r.pjs.length,r.pjs.join(", ")]));
   sheets.push({name:"전체 요약",rows:ov});
   for(const pj of PROJECTS){
     const rows=[["구분","이름","신규여부","1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월","비고"]];
@@ -904,7 +904,8 @@ function exportSheets(){
       const mm=Array(13).fill(0); for(const [pct,f,t] of p.s) for(let i=f;i<=t;i++) mm[i]+=pct;
       const row=[p.r||"참여연구원",p.n,p.isNew?"신규":"기존"];
       for(let i=1;i<=12;i++) row.push(mm[i]?r1(mm[i]):null);
-      row.push(p.note||""); rows.push(row);
+      const note=p.note||"";
+      row.push(p.q ? (note?note+" · 퇴사":"퇴사") : note); rows.push(row);
     }
     sheets.push({name:pj.name,rows});
   }
