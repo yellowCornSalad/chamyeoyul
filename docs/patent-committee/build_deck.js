@@ -74,8 +74,8 @@ const TB = { type: "solid", color: LINE, pt: 1 };
   txt(s, "특허심의위원회 설치·운영(안)", { x: MX, y: 2.02, w: 8.6, h: 0.72, fontSize: 34, bold: true, color: WHITE });
   txt(s, "「발명진흥법」에 따른 직무발명 관리체계 정비", { x: MX + 0.02, y: 2.86, w: 8.6, h: 0.36, fontSize: 15, color: "AEBBD8" });
   txt(s, [
-    { text: "2026. 9. 4.", options: { fontSize: 12, color: "D6DDEC", breakLine: true } },
-    { text: "연구기획팀", options: { fontSize: 12, color: "D6DDEC" } },
+    { text: "2026. 9.", options: { fontSize: 12, color: "D6DDEC", breakLine: true } },
+    { text: "연구기획팀 배준호 연구원", options: { fontSize: 12, color: "D6DDEC" } },
   ], { x: MX + 0.02, y: 5.92, w: 5, h: 0.62, lineSpacing: 20 });
 }
 
@@ -407,7 +407,7 @@ const TB = { type: "solid", color: LINE, pt: 1 };
   });
   txt(s, "후속 조치", { x: MX, y: 5.28, w: 3, h: 0.28, fontSize: 11, bold: true, color: "8FA8D8" });
   txt(s, "① 보상규정(안) 임직원 협의    ②  제1회 위원회 개최    ③  규정 제정 및 시행    ④  발명 신고 상시 접수", { x: MX, y: 5.62, w: 8.6, h: 0.3, fontSize: 12, color: "E3E8F4" });
-  txt(s, "㈜엔키화이트햇  연구기획팀  ·  2026. 9. 4.", { x: MX, y: 6.48, w: 6, h: 0.28, fontSize: 10.5, color: "9BA9C8" });
+  txt(s, "㈜엔키화이트햇  연구기획팀 배준호 연구원  ·  2026. 9.", { x: MX, y: 6.48, w: 6, h: 0.28, fontSize: 10.5, color: "9BA9C8" });
   s.addNotes("승인해 주시면 보상규정(안)의 임직원 협의 절차를 진행하고, 제1회 특허심의위원회 일정을 확정하여 안내드리겠습니다.");
 }
 
