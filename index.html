@@ -126,7 +126,7 @@
   .ptable tr[data-n]:hover td{background:#f8f9fc}
   .ptable td.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   .ptable td.over{color:var(--red);font-weight:700}
-  .ptable td.full{color:var(--amber);font-weight:700}
+  .ptable td.full{color:var(--amber);font-weight:700}   /* 90%대 */
   .barcol{width:120px}
   .bar{height:6px;border-radius:5px;background:#eef0f3;overflow:hidden;min-width:64px}
   .bar>span{display:block;height:100%;border-radius:5px}
@@ -174,7 +174,7 @@
   .yrhead .sum{font-size:14px;font-weight:600}
   .yrhead .rem{color:var(--sub);font-size:12.5px}
   .over{color:var(--red);font-weight:700}
-  .full{color:var(--amber);font-weight:700}
+  .full{color:var(--amber);font-weight:700}   /* 90%대 */
   table.pj{width:100%;border-collapse:collapse;margin:2px 0 12px;font-size:13px}
   table.pj td{padding:8px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
   table.pj td.p{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
@@ -569,10 +569,20 @@ const r1 = x => Math.round(x*10)/10;
 function strip(entries){ const m=Array(13).fill(0); for(const e of entries) for(const [p,f,t] of e.s) for(let i=f;i<=t;i++) m[i]+=p; return m; }
 function peakOf(m){ let mx=0,mi=1; for(let i=1;i<=12;i++) if(m[i]>mx+1e-9){mx=m[i];mi=i;} return {mx:r1(mx),mi}; }
 function segText(s){ return s.map(([p,f,t])=> f===1&&t===12 ? p+"%" : `${p}%(${f}~${t}월)`).join(" → "); }
+/* 참여율 밴드 — 100% 이상은 빨강(만땅), 90%대는 주황. 색 기준은 여기 한 곳에서만 정한다. */
+const BAND_FULL = 99.999, BAND_WARN = 90;
+function bandOf(v){
+  if(v > 100.0001) return "over";
+  if(v >= BAND_FULL) return "full";
+  if(v >= BAND_WARN) return "warn";
+  return "room";
+}
+const BAND_CLS = {over:"red", full:"red", warn:"amber", room:"green"};
+const BAND_TXT = {over:"over", full:"over", warn:"full", room:""};
 function cellColor(v){
-  if(v>100.0001) return {bg:"#fee2e2",fg:"#b91c1c"};
-  if(v>=99.999)  return {bg:"#fde68a",fg:"#92400e"};
-  if(v>=80)      return {bg:"#fef3c7",fg:"#92400e"};
+  if(v>100.0001)      return {bg:"#fecaca",fg:"#991b1b"};
+  if(v>=BAND_FULL)    return {bg:"#fee2e2",fg:"#b91c1c"};
+  if(v>=BAND_WARN)    return {bg:"#fef3c7",fg:"#92400e"};
   if(v>0)        return {bg:"#dcfce7",fg:"#166534"};
   return {bg:"#f3f4f6",fg:"#9ca3af"};
 }
@@ -604,10 +614,12 @@ function projStats(){
 }
 function renderProjectCards(){
   const st=projStats();
-  let over=0,full=0; for(const n of NAMES){ const {mx}=peakOf(strip(INDEX[n])); if(mx>100.0001)over++; else if(mx>=99.999)full++; }
+  let over=0,full=0,warn=0;
+  for(const n of NAMES){ const b=bandOf(peakOf(strip(INDEX[n])).mx);
+    if(b==="over")over++; else if(b==="full")full++; else if(b==="warn")warn++; }
   let h=`<div class="pcard total ${!projectFilters.length?'active':''}" data-proj=""><div class="pcard-top"><span class="pcard-name">전체</span><span class="pcard-badge">ALL</span></div>`
     +`<div class="pcard-label">총 인원</div><div class="pcard-big">${NAMES.length}<span class="unit">명</span></div>`
-    +`<div class="pcard-foot"><span class="fx"><i class="pd red"></i>초과 ${over}</span><span class="fx"><i class="pd amber"></i>100% ${full}</span></div></div>`;
+    +`<div class="pcard-foot"><span class="fx"><i class="pd red"></i>100%↑ ${full+over}</span><span class="fx"><i class="pd amber"></i>90%대 ${warn}</span></div></div>`;
   for(const pj of PROJECTS){ const s=st[pj.name];
     h+=`<div class="pcard ${projectFilters.includes(pj.name)?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name"><i class="pcarddot" style="background:${projColor(pj.name).fg}"></i>${pj.name}</span>${canEdit(pj.name)?'<span class="pcard-badge mine">내 담당</span>':`<span class="pcard-badge">${ownerName(pj.name)}</span>`}</div>`
       +`<div class="pcard-label">참여 인원</div><div class="pcard-big">${s.cnt}<span class="unit">명</span></div>`
@@ -651,10 +663,13 @@ function candidates(){
 }
 function renderPills(){
   const scope=scopeNames();
-  let over=0,full=0,room=0; scope.forEach(n=>{ const {mx}=peakOf(strip(INDEX[n])); if(mx>100.0001)over++; else if(mx>=99.999)full++; else room++; });
+  let over=0,full=0,warn=0,room=0;
+  scope.forEach(n=>{ const b=bandOf(peakOf(strip(INDEX[n])).mx);
+    if(b==="over")over++; else if(b==="full")full++; else if(b==="warn")warn++; else room++; });
   const quit=scope.filter(n=>isRetired(n)).length;
   const P=(k,label,cls,cnt)=>`<button class="pill ${statusFilter===k?'active':''}" data-status="${k}">${cls?`<i class="pd ${cls}"></i>`:''}${label}<span class="cnt">${cnt}</span></button>`;
-  pillsEl.innerHTML = P("all","전체","",scope.length)+P("room","여유","green",room)+P("full","100% 도달","amber",full)+P("over","초과","red",over)
+  pillsEl.innerHTML = P("all","전체","",scope.length)+P("room","여유","green",room)+P("warn","90%대","amber",warn)
+    +P("full","100% 도달","red",full)+P("over","초과","red",over)
     + (quit?P("quit","퇴사","",quit):"");
   pillsEl.querySelectorAll(".pill").forEach(b=> b.onclick=()=>{ statusFilter=b.dataset.status; selected=null; pushView(); render(); });
 }
@@ -686,9 +701,10 @@ function personList(){
   const term=q.value.trim(); if(term) names=names.filter(n=>n.includes(term));
   if(teamFilter) names=names.filter(n=>teamOf(n)===teamFilter);
   let rows=names.map(n=>{ const {mx}=peakOf(strip(INDEX[n])); return {n,mx}; });
-  if(statusFilter==="over") rows=rows.filter(r=>r.mx>100.0001);
-  else if(statusFilter==="full") rows=rows.filter(r=>r.mx>=99.999&&r.mx<=100.0001);
-  else if(statusFilter==="room") rows=rows.filter(r=>r.mx<99.999);
+  if(statusFilter==="over") rows=rows.filter(r=>bandOf(r.mx)==="over");
+  else if(statusFilter==="full") rows=rows.filter(r=>bandOf(r.mx)==="full");
+  else if(statusFilter==="warn") rows=rows.filter(r=>bandOf(r.mx)==="warn");
+  else if(statusFilter==="room") rows=rows.filter(r=>bandOf(r.mx)==="room");
   else if(statusFilter==="quit") rows=rows.filter(r=>isRetired(r.n));
   rows.sort(CMP_MAIN[sortKey]||CMP_MAIN.team);
   return rows;
@@ -696,7 +712,7 @@ function personList(){
 
 /* ===== 렌더 조각 ===== */
 function summaryLine(mx,mi,rem){
-  const cls = mx>100.0001?"over":(mx>=99.999?"full":"");
+  const cls = BAND_TXT[bandOf(mx)];
   return `<div class="yrhead"><span class="sum">최대 동시 참여 <span class="${cls}">${mx}%</span> <span style="color:var(--sub)">(${mi}월)</span></span>`
     + `<span class="rem">· 잔여(추가 가능) ${rem<0?`<span class="over">${rem}%</span>`:`<b>${rem}%</b>`}</span>`
     + (mx>100.0001?` <span class="over">· 100% 초과, 조정 필요</span>`:``) + `</div>`;
@@ -729,7 +745,7 @@ function cardView(name){
     }
     html+=`</table>`;
   }
-  html+=stripHtml(m)+`<div class="legend">칸 = 그 달의 전체 과제 합산 참여율 (초록 여유 · 노랑 100% 근접 · 빨강 초과)</div></div>`;
+  html+=stripHtml(m)+`<div class="legend">칸 = 그 달의 전체 과제 합산 참여율 (초록 여유 · 주황 90%대 · 빨강 100%·초과)</div></div>`;
   return html;
 }
 function monOpts(sel){ let o=""; for(let i=1;i<=12;i++) o+=`<option value="${i}"${i===sel?" selected":""}>${i}</option>`; return o; }
@@ -782,11 +798,12 @@ function renderList(){
   let h=`<table class="ptable"><thead><tr><th>이름</th><th>참여 과제</th><th class="r">최대</th><th class="barcol">부하</th><th class="r">잔여</th><th class="r">상태</th></tr></thead><tbody>`;
   for(const r of rows){
     const pk=r.mx, rem=r1(100-pk);
-    const badge = pk>100.0001?`<span class="badge red">초과</span>`:(pk>=99.999?`<span class="badge amber">100%</span>`:`<span class="badge green">여유</span>`);
-    const barc = pk>100.0001?"var(--red)":(pk>=99.999?"var(--amber)":"var(--green)");
+    const bd = bandOf(pk);
+    const badge = `<span class="badge ${BAND_CLS[bd]}">${bd==="over"?"초과":bd==="full"?"100%":bd==="warn"?"90%대":"여유"}</span>`;
+    const barc = bd==="over"||bd==="full"?"var(--red)":(bd==="warn"?"var(--amber)":"var(--green)");
     const pjs=[...new Set(INDEX[r.n].map(x=>x.project))];
     h+=`<tr data-n="${r.n}" class="${isRetired(r.n)?'retiredrow':''}"><td><b>${r.n}</b>${isRetired(r.n)?' <span class="quitbadge">퇴사</span>':''}${isNewIn(r.n)&&!isRetired(r.n)?' <span class="newbadge">NEW</span>':''}<div class="teamsub">${teamOf(r.n)||"—"}</div></td><td>${chipsHtml(pjs)}</td>`
-      +`<td class="r ${pk>100.0001?'over':(pk>=99.999?'full':'')}">${pk}%</td>`
+      +`<td class="r ${BAND_TXT[bd]}">${pk}%</td>`
       +`<td class="barcol"><div class="bar"><span style="width:${Math.min(100,pk)}%;background:${barc}"></span></div></td>`
       +`<td class="r">${rem<0?`<span class="over">${rem}%</span>`:rem+"%"}</td><td class="r">${badge}</td></tr>`;
   }
