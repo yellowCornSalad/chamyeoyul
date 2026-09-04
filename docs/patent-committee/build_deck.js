@@ -1,395 +1,412 @@
 /**
- * 특허심의위원회 설치·운영(안) — 대표이사 보고 자료 생성 스크립트
- * 실행: node build_deck.js  (pptxgenjs 필요)
+ * 특허심의위원회 설치·운영(안) — 대표이사 보고 자료
+ * 사내 표준 양식(엔키화이트햇 회사소개서) 서식 적용
+ * 실행: NODE_PATH=<pptxgenjs 경로> node build_deck.js
  */
 const pptxgen = require("pptxgenjs");
 const path = require("path");
 
-const NAVY = "13294B", NAVY2 = "1F3E63", GOLD = "C8A96A", GOLD_D = "9A7C3E";
-const BG = "F5F7FA", WHITE = "FFFFFF", TEXT = "263248", MUTED = "6B7A99", LINE = "DDE3ED";
+const NAVY = "10173A", BLUE = "1C67C7", BLUE_DK = "163A78", GRAY_HD = "7C8BA1";
+const BG = "F7F7F7", WHITE = "FFFFFF", LINE = "C9D8EC", TBLHD = "E8F0FA";
+const SOFT = "F3F7FB", PILLLN = "A9C4E6", TXT = "333333", MUTED = "7B8492", SEP = "C9CDD6";
 const F = "맑은 고딕";
-const SW = 13.333, SH = 7.5, M = 0.62;
-const CW = SW - M * 2;
+const MX = 1.0, CW = 11.33, SW = 13.333, SH = 7.5;
+const A = (f) => path.join(__dirname, "assets", f);
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
 pres.author = "㈜엔키화이트햇 연구기획팀";
 pres.title = "특허심의위원회 설치·운영(안)";
 
-const sh = () => ({ type: "outer", color: "9AABC4", blur: 10, offset: 1, angle: 90, opacity: 0.22 });
-let pageNo = 0;
+const txt = (s, t, o) => s.addText(t, Object.assign({ isTextBox: true, margin: 0, fontFace: F, color: TXT }, o));
+const rect = (s, o) => s.addShape(pres.ShapeType.rect, o);
+const rrect = (s, o) => s.addShape(pres.ShapeType.roundRect, o);
 
-function card(s, o) {
-  s.addShape(pres.ShapeType.roundRect, {
-    x: o.x, y: o.y, w: o.w, h: o.h, rectRadius: 0.06,
-    fill: { color: o.fill || WHITE }, line: { color: o.line || LINE, width: 1 },
-    shadow: o.noShadow ? undefined : sh(),
-  });
-}
-function txt(s, t, o) { s.addText(t, Object.assign({ isTextBox: true, margin: 0, fontFace: F, color: TEXT }, o)); }
-
-function base(title, eyebrow) {
+/** 본문 슬라이드 골격: 배경 + "대분류 │ 소분류" 제목 + 리드문 + 페이지 번호 */
+function page(cat, sub, lead, no) {
   const s = pres.addSlide();
-  pageNo += 1;
   s.background = { color: BG };
-  txt(s, eyebrow, { x: M, y: 0.34, w: 8, h: 0.24, fontSize: 10.5, bold: true, color: GOLD_D, charSpacing: 1.6 });
-  txt(s, title, { x: M, y: 0.60, w: 10.6, h: 0.52, fontSize: 27, bold: true, color: NAVY });
-  s.addShape(pres.ShapeType.roundRect, { x: SW - M - 0.42, y: 0.36, w: 0.42, h: 0.42, rectRadius: 0.1, fill: { color: NAVY }, line: { color: NAVY } });
-  txt(s, String(pageNo).padStart(2, "0"), { x: SW - M - 0.42, y: 0.36, w: 0.42, h: 0.42, fontSize: 12, bold: true, color: GOLD, align: "center", valign: "middle" });
-  txt(s, "㈜엔키화이트햇  |  연구기획팀", { x: M, y: SH - 0.5, w: 6, h: 0.22, fontSize: 8.5, color: MUTED });
+  txt(s, [
+    { text: cat, options: { bold: true, fontSize: 21, color: NAVY } },
+    { text: "   │   ", options: { fontSize: 18, color: SEP } },
+    { text: sub, options: { bold: true, fontSize: 21, color: NAVY } },
+  ], { x: MX, y: 0.76, w: CW, h: 0.42, valign: "middle" });
+  if (lead) txt(s, lead, { x: MX, y: 1.33, w: CW, h: 0.62, fontSize: 11.5, color: "3A3A3A", lineSpacing: 19 });
+  txt(s, String(no), { x: 0, y: 6.98, w: SW, h: 0.24, fontSize: 9, color: "A9AEB8", align: "center" });
   return s;
 }
+/** 연한 파랑 알약형 구분 띠 */
+function pill(s, y, label, x, w) {
+  x = x === undefined ? MX : x; w = w === undefined ? CW : w;
+  rrect(s, { x, y, w, h: 0.38, rectRadius: 0.19, fill: { color: SOFT }, line: { color: PILLLN, width: 1 } });
+  txt(s, label, { x, y, w, h: 0.38, fontSize: 12.5, bold: true, color: BLUE_DK, align: "center", valign: "middle" });
+}
+/** 번호 원이 있는 진한 네이비 띠 */
+function band(s, y, num, label, h) {
+  h = h || 0.42;
+  rrect(s, { x: MX, y, w: CW, h, rectRadius: h / 2, fill: { color: NAVY }, line: { color: NAVY } });
+  if (num) {
+    s.addShape(pres.ShapeType.ellipse, { x: MX + 0.16, y: y + (h - 0.28) / 2, w: 0.28, h: 0.28, fill: { color: NAVY }, line: { color: WHITE, width: 1 } });
+    txt(s, num, { x: MX + 0.16, y: y + (h - 0.28) / 2, w: 0.28, h: 0.28, fontSize: 9, bold: true, color: WHITE, align: "center", valign: "middle" });
+  }
+  txt(s, label, { x: MX, y, w: CW, h, fontSize: 12.5, bold: true, color: WHITE, align: "center", valign: "middle" });
+}
+/** 파란 헤더 바 */
+function hbar(s, o) {
+  rect(s, { x: o.x, y: o.y, w: o.w, h: o.h || 0.42, fill: { color: o.fill || BLUE }, line: { color: o.fill || BLUE } });
+  txt(s, o.t, { x: o.x + 0.08, y: o.y, w: o.w - 0.16, h: o.h || 0.42, fontSize: o.fs || 11.5, bold: true, color: WHITE, align: "center", valign: "middle" });
+}
+/** 흰 본문 박스 */
+function wbox(s, o) {
+  rect(s, { x: o.x, y: o.y, w: o.w, h: o.h, fill: { color: o.fill || WHITE }, line: { color: o.line || LINE, width: 1 } });
+}
+const note = (s, y, t, h) => {
+  rect(s, { x: MX, y, w: CW, h: h || 0.62, fill: { color: SOFT }, line: { color: PILLLN, width: 1 } });
+  txt(s, t, { x: MX + 0.24, y, w: CW - 0.48, h: h || 0.62, fontSize: 10, color: "44506A", valign: "middle", lineSpacing: 15 });
+};
+const cell = (t, o) => ({ text: t, options: Object.assign({ fontFace: F, fontSize: 11, color: TXT, align: "center", valign: "middle" }, o || {}) });
+const TB = { type: "solid", color: LINE, pt: 1 };
 
-/* ─── 01 표지 ─────────────────────────────────────────── */
+/* ── 1. 표지 ─────────────────────────────────────────── */
 {
-  const s = pres.addSlide(); pageNo = 0;
-  s.background = { color: NAVY };
-  s.addShape(pres.ShapeType.ellipse, { x: 9.9, y: -1.5, w: 5.4, h: 5.4, fill: { color: NAVY2 }, line: { color: NAVY2 } });
-  s.addShape(pres.ShapeType.ellipse, { x: 11.6, y: 4.7, w: 3.2, h: 3.2, fill: { color: NAVY2 }, line: { color: NAVY2 } });
-  txt(s, "연구기획팀 보고  |  2026. 9. 4.", { x: M, y: 1.42, w: 8, h: 0.28, fontSize: 12, bold: true, color: GOLD, charSpacing: 1.6 });
-  txt(s, "특허심의위원회 설치·운영(안)", { x: M, y: 1.92, w: 10.4, h: 0.86, fontSize: 42, bold: true, color: WHITE });
-  txt(s, "「발명진흥법」에 따른 직무발명 관리체계 정비", { x: M, y: 2.86, w: 10.4, h: 0.42, fontSize: 18, color: "AEC0DC" });
-  const chips = [["위원", "6인"], ["정비 서식", "4종"], ["개선 절차", "6단계"], ["1회차 안건", "4건"]];
-  chips.forEach((c, i) => {
-    const x = M + i * 2.34;
-    s.addShape(pres.ShapeType.roundRect, { x, y: 4.02, w: 2.1, h: 0.92, rectRadius: 0.07, fill: { color: NAVY2 }, line: { color: "2E5177", width: 1 } });
-    txt(s, c[0], { x: x + 0.18, y: 4.16, w: 1.8, h: 0.22, fontSize: 10, color: "AEC0DC" });
-    txt(s, c[1], { x: x + 0.18, y: 4.40, w: 1.8, h: 0.38, fontSize: 20, bold: true, color: GOLD });
-  });
+  const s = pres.addSlide();
+  s.addImage({ path: A("bg_cover.jpg"), x: 0, y: 0, w: SW, h: SH });
+  txt(s, "특허심의위원회 설치·운영(안)", { x: MX, y: 2.02, w: 8.6, h: 0.72, fontSize: 34, bold: true, color: WHITE });
+  txt(s, "「발명진흥법」에 따른 직무발명 관리체계 정비", { x: MX + 0.02, y: 2.86, w: 8.6, h: 0.36, fontSize: 15, color: "AEBBD8" });
   txt(s, [
-    { text: "지시  ", options: { color: "8FA4C4", fontSize: 11 } },
-    { text: "2026. 8. 28.(금) 전성학 부사장", options: { color: WHITE, fontSize: 11, bold: true, breakLine: true } },
-    { text: "보고  ", options: { color: "8FA4C4", fontSize: 11 } },
-    { text: "연구기획팀 배준호 연구원 (위원회 간사)", options: { color: WHITE, fontSize: 11, bold: true } },
-  ], { x: M, y: 5.42, w: 8, h: 0.72, lineSpacing: 20 });
+    { text: "2026. 9. 4.", options: { fontSize: 12, color: "D6DDEC", breakLine: true } },
+    { text: "연구기획팀", options: { fontSize: 12, color: "D6DDEC" } },
+  ], { x: MX + 0.02, y: 5.92, w: 5, h: 0.62, lineSpacing: 20 });
 }
 
-/* ─── 02 보고 개요 ─────────────────────────────────────── */
+/* ── 2. CONTENTS ─────────────────────────────────────── */
 {
-  const s = base("보고 개요", "REPORT SUMMARY");
+  const s = pres.addSlide();
+  s.addImage({ path: A("bg_contents.jpg"), x: 0, y: 0, w: SW, h: SH });
+  txt(s, "CONTENTS", { x: 1.5, y: 2.12, w: 5, h: 0.7, fontSize: 33, bold: true, color: WHITE });
+  txt(s, "특허 출원·등록 프로세스 재정립을 위한\n특허심의위원회 설치·운영 및 직무발명 보상 기준 보고", { x: 1.52, y: 2.94, w: 5.6, h: 0.7, fontSize: 12.5, color: "BFC9DE", lineSpacing: 22 });
   const items = [
-    ["01", "지시 사항", "2026. 8. 28.(금) 전성학 부사장께서 자사의 특허 출원·등록 프로세스\n재정립을 위한 특허심의위원회 구성을 지시"],
-    ["02", "설치 목적", "「발명진흥법」 제13조·제15조에 따른 권리 승계·보상 절차를 사내에서\n이행하고, 특허 관리 체계를 상장 기업 수준으로 정비"],
-    ["03", "보고 범위", "위원회 구성·운영(안), 개선된 출원·등록 프로세스,\n직무발명 보상규정(안) 및 서식 4종, 제1회 안건"],
+    ["1. 추진 배경 및 법적 근거", "특허 관리 방향의 전환 · 발명진흥법 이행 사항"],
+    ["2. 위원회 구성 및 운영", "위원 6인 구성 · 개선된 출원·등록 프로세스"],
+    ["3. 직무발명 보상 기준", "보상규정(안) · 보상 등급 결정 기준 · 서식 4종"],
+    ["4. 제1회 위원회 안건 및 승인 요청", "안건 4건 · 운영상 관리 포인트"],
   ];
   items.forEach((it, i) => {
-    const y = 1.42 + i * 1.42;
-    card(s, { x: M, y, w: 7.72, h: 1.22 });
-    s.addShape(pres.ShapeType.roundRect, { x: M + 0.26, y: y + 0.32, w: 0.56, h: 0.56, rectRadius: 0.1, fill: { color: NAVY }, line: { color: NAVY } });
-    txt(s, it[0], { x: M + 0.26, y: y + 0.32, w: 0.56, h: 0.56, fontSize: 14, bold: true, color: GOLD, align: "center", valign: "middle" });
-    txt(s, it[1], { x: M + 1.02, y: y + 0.20, w: 6.4, h: 0.3, fontSize: 15, bold: true, color: NAVY });
-    txt(s, it[2], { x: M + 1.02, y: y + 0.55, w: 6.4, h: 0.56, fontSize: 11.5, color: TEXT, lineSpacing: 17 });
+    const y = 2.28 + i * 1.02;
+    rect(s, { x: 8.62, y: y + 0.02, w: 0.028, h: 0.62, fill: { color: "9FB0D0" }, line: { color: "9FB0D0" } });
+    txt(s, it[0], { x: 8.84, y: y, w: 4.0, h: 0.32, fontSize: 15, bold: true, color: WHITE });
+    txt(s, it[1], { x: 8.84, y: y + 0.34, w: 4.0, h: 0.3, fontSize: 10, color: "A9B4CC" });
   });
-  const rx = M + 8.02, rw = CW - 8.02;
-  card(s, { x: rx, y: 1.42, w: rw, h: 4.28, fill: NAVY, line: NAVY });
-  txt(s, "승인 요청 사항", { x: rx + 0.32, y: 1.72, w: rw - 0.64, h: 0.34, fontSize: 16, bold: true, color: WHITE });
-  const asks = [
-    ["특허심의위원회 설치·운영(안)", "위원 6인 구성 및 의결 방식"],
-    ["직무발명 보상규정(안)", "등급별 보상금 기준 및 서식 4종"],
-    ["제1회 위원회 개최 및 안건", "운영 방안·보상 기준·아이디어 발표"],
-  ];
-  asks.forEach((a, i) => {
-    const y = 2.32 + i * 1.05;
-    s.addShape(pres.ShapeType.roundRect, { x: rx + 0.32, y: y + 0.04, w: 0.24, h: 0.24, rectRadius: 0.06, fill: { color: GOLD }, line: { color: GOLD } });
-    txt(s, a[0], { x: rx + 0.70, y: y, w: rw - 1.02, h: 0.3, fontSize: 12.5, bold: true, color: WHITE });
-    txt(s, a[1], { x: rx + 0.70, y: y + 0.32, w: rw - 1.02, h: 0.44, fontSize: 10.5, color: "AEC0DC", lineSpacing: 15 });
-  });
-  txt(s, "※ 보상규정(안)은 「발명진흥법」 제15조제3항에 따라 확정 전 임직원 협의 절차를 거칩니다.", { x: rx + 0.32, y: 5.16, w: rw - 0.64, h: 0.42, fontSize: 9.5, color: "8FA4C4", lineSpacing: 14 });
-  s.addNotes("8/28 전성학 부사장 지시로 특허심의위원회 구성을 준비했습니다. 오늘 보고는 위원회 구성·운영안, 개선 프로세스, 보상규정(안) 승인을 요청드리는 자리입니다.");
 }
 
-/* ─── 03 추진 배경 ─────────────────────────────────────── */
+/* ── 3. 보고 개요 ────────────────────────────────────── */
 {
-  const s = base("추진 배경 — 특허 관리 방향의 전환", "BACKGROUND");
-  const colW = 5.86;
-  const cols = [
-    { x: M, title: "기존 (AS-IS)", sub: "양(量) 중심의 출원", accent: MUTED, fill: WHITE,
-      rows: ["OFFen의 상품성 향상 및 기술평가를 위한 다수의 특허 등록 추진", "발명 선별 기준 부재 — 사업 기여도와 무관한 출원 혼재", "직무발명보상금 지급 기준 미정립", "특허 연차료·해외 출원에 대한 관리 체계 부재"] },
-    { x: M + colW + 0.373, title: "개선 (TO-BE)", sub: "가치 중심의 선별·보상", accent: GOLD_D, fill: WHITE,
-      rows: ["사업 기여도가 높은 발명을 선별하여 집중 지원", "직무발명보상금 지급 기준 정립 (등급제 운영)", "특허 연차료 관리 — 등급별 유지·포기 판단", "해외 출원 검토 — 조약우선권 기한 내 의사결정"] },
-  ];
-  cols.forEach((c) => {
-    card(s, { x: c.x, y: 1.42, w: colW, h: 3.72 });
-    txt(s, c.title, { x: c.x + 0.3, y: 1.66, w: colW - 0.6, h: 0.32, fontSize: 16, bold: true, color: c.accent === MUTED ? MUTED : NAVY });
-    txt(s, c.sub, { x: c.x + 0.3, y: 2.00, w: colW - 0.6, h: 0.26, fontSize: 11, color: c.accent });
-    c.rows.forEach((r, i) => {
-      const y = 2.46 + i * 0.66;
-      s.addShape(pres.ShapeType.roundRect, { x: c.x + 0.3, y: y + 0.07, w: 0.16, h: 0.16, rectRadius: 0.04, fill: { color: c.accent }, line: { color: c.accent } });
-      txt(s, r, { x: c.x + 0.62, y: y, w: colW - 0.92, h: 0.56, fontSize: 11.5, color: TEXT, lineSpacing: 16 });
-    });
-  });
-  card(s, { x: M, y: 5.36, w: CW, h: 0.92, fill: NAVY, line: NAVY });
-  txt(s, [
-    { text: "기대 효과   ", options: { fontSize: 11, color: GOLD, bold: true } },
-    { text: "발명 신고부터 보상·해외 출원까지 문서로 증빙되는 절차 확립 → 상장 심사·기술평가·정부 R&D 대응이 가능한 지식재산 관리 체계", options: { fontSize: 13, color: WHITE, bold: true } },
-  ], { x: M + 0.34, y: 5.36, w: CW - 0.68, h: 0.92, valign: "middle", lineSpacing: 19 });
-}
-
-/* ─── 04 법적 근거 ─────────────────────────────────────── */
-{
-  const s = base("법적 근거 — 「발명진흥법」 조문별 사내 이행 사항", "LEGAL BASIS");
+  const s = page("보고 개요", "지시 사항 및 승인 요청",
+    "2026. 8. 28.(금) 전성학 부사장의 지시에 따라 특허 출원·등록 프로세스 재정립을 위한 특허심의위원회 구성(안)을 보고드립니다.\n위원회는 「발명진흥법」에 따른 권리 승계·보상 절차를 사내에서 이행하고, 특허 관리 체계를 상장 기업 수준으로 정비하는 것을 목적으로 합니다.", 2);
   const rows = [
-    ["제12조", "직무발명 완성사실의 통지", "발명자는 발명 완성 시 지체 없이 회사에 서면 신고", "직무발명 신고서 제출"],
-    ["제13조", "승계 여부의 통지", "신고 접수일부터 4개월 이내 승계 여부를 서면 통지 (시행령 제7조)", "특허심의위원회 심의·결과 통지"],
-    ["제15조", "직무발명에 대한 보상", "권리 승계 시 정당한 보상, 기준·절차를 규정으로 정하고 협의", "직무발명 보상규정(안) 제정"],
-    ["제16조", "출원 유보 시의 보상", "승계 후 출원하지 않거나 포기한 경우에도 보상", "출원유보보상금 지급"],
-    ["제19조", "비밀유지의 의무", "출원 시까지 발명 내용 비밀유지 (위반 시 제58조 벌칙)", "신고서 서약 · 양도계약 제7조"],
+    ["지시 사항", "2026. 8. 28.(금) 전성학 부사장 — 자사의 특허 출원·등록 프로세스 재정립을 위한 특허심의위원회 구성 지시"],
+    ["설치 목적", "「발명진흥법」 제13조·제15조에 따른 권리 승계 및 보상 절차의 사내 이행, 사업 기여도 중심의 발명 선별 체계 확립"],
+    ["보고 범위", "위원회 구성·운영(안), 개선된 출원·등록 프로세스, 직무발명 보상규정(안) 및 서식 4종, 제1회 위원회 안건"],
   ];
   rows.forEach((r, i) => {
-    const y = 1.44 + i * 0.94;
-    card(s, { x: M, y, w: CW, h: 0.80 });
-    s.addShape(pres.ShapeType.roundRect, { x: M + 0.22, y: y + 0.19, w: 0.92, h: 0.42, rectRadius: 0.08, fill: { color: NAVY }, line: { color: NAVY } });
-    txt(s, r[0], { x: M + 0.22, y: y + 0.19, w: 0.92, h: 0.42, fontSize: 12, bold: true, color: GOLD, align: "center", valign: "middle" });
-    txt(s, r[1], { x: M + 1.28, y: y + 0.16, w: 2.5, h: 0.48, fontSize: 12.5, bold: true, color: NAVY, valign: "middle" });
-    txt(s, r[2], { x: M + 3.92, y: y + 0.16, w: 4.86, h: 0.48, fontSize: 11, color: TEXT, valign: "middle", lineSpacing: 15 });
-    s.addShape(pres.ShapeType.roundRect, { x: M + 8.96, y: y + 0.17, w: 3.14, h: 0.46, rectRadius: 0.08, fill: { color: "EEF2F8" }, line: { color: "D7DFEC", width: 1 } });
-    txt(s, r[3], { x: M + 9.08, y: y + 0.17, w: 2.9, h: 0.46, fontSize: 10.5, bold: true, color: NAVY, align: "center", valign: "middle" });
+    const y = 2.16 + i * 0.60;
+    rect(s, { x: MX, y, w: 1.55, h: 0.60, fill: { color: BLUE }, line: { color: BLUE } });
+    txt(s, r[0], { x: MX, y, w: 1.55, h: 0.60, fontSize: 11.5, bold: true, color: WHITE, align: "center", valign: "middle" });
+    wbox(s, { x: MX + 1.55, y, w: CW - 1.55, h: 0.60 });
+    txt(s, r[1], { x: MX + 1.78, y, w: CW - 2.0, h: 0.60, fontSize: 11, color: TXT, valign: "middle" });
   });
-  txt(s, "※ 「발명진흥법」 제13조에 따라 사전 승계 규정이 있는 경우 권리는 발명을 완성한 때부터 회사에 승계되며, 4개월 내 미승계를 통지하지 않으면 승계한 것으로 처리됩니다.", { x: M, y: 6.24, w: CW, h: 0.3, fontSize: 9.5, color: MUTED });
-  s.addNotes("제13조의 정식 조문 제목은 '승계 여부의 통지'입니다. 4개월 기한은 발명진흥법 시행령 제7조에 규정되어 있습니다.");
+  band(s, 4.24, null, "승 인 요 청 사 항");
+  const asks = [
+    ["특허심의위원회 설치·운영(안)", "위원 6인 구성\n안건 발생 시 수시 개최\n출석위원 과반수 찬성으로 의결"],
+    ["직무발명 보상규정(안) 및 서식 4종", "등급별 보상금 지급 기준\n발명신고서 · 등급 평가표\n특허권 양도계약서"],
+    ["제1회 특허심의위원회 개최", "운영 방안 및 보상 기준 심의\n기 보유 지식재산권 기한 관리\n제품개발팀 아이디어 심의"],
+  ];
+  const bw = (CW - 2 * 0.25) / 3;
+  asks.forEach((a, i) => {
+    const x = MX + i * (bw + 0.25);
+    hbar(s, { x, y: 4.92, w: bw, t: a[0], fs: 11 });
+    wbox(s, { x, y: 5.34, w: bw, h: 1.02 });
+    txt(s, a[1], { x: x + 0.18, y: 5.34, w: bw - 0.36, h: 1.02, fontSize: 10.5, color: TXT, valign: "middle", lineSpacing: 16 });
+  });
+  txt(s, "※ 직무발명 보상규정(안)은 「발명진흥법」 제15조제3항에 따라 확정 전 임직원 협의 절차를 거칩니다.", { x: MX, y: 6.55, w: CW, h: 0.28, fontSize: 9.5, color: MUTED });
+  s.addNotes("8/28 부사장님 지시로 위원회 구성을 준비했습니다. 오늘은 구성·운영안, 보상규정(안), 제1회 개최 세 건의 승인을 요청드립니다.");
 }
 
-/* ─── 05 위원회 구성 및 운영 ────────────────────────────── */
+/* ── 4. 추진 배경 ────────────────────────────────────── */
 {
-  const s = base("위원회 구성 및 운영(안)", "COMMITTEE");
-  const mem = [
-    ["이성권", "대표이사"], ["전성학", "부사장"], ["최창진", "이사"],
-    ["이정민", "실장"], ["이태우", "이사"], ["배준호", "연구원 · 간사"],
+  const s = page("추진 배경", "특허 관리 방향의 전환",
+    "기존에는 OFFen의 상품성 향상 및 기술평가를 위해 다수의 특허 등록을 추진해 왔으나, 발명 선별 기준과 보상 기준이 정립되어 있지 않았습니다.\n앞으로는 사업 기여도가 높은 발명을 선별하여 집중 지원하고, 보상·연차료·해외 출원까지 일관된 기준으로 관리하고자 합니다.", 3);
+  const colW = (CW - 0.33) / 2;
+  const cols = [
+    { x: MX, fill: GRAY_HD, t: "기존 (AS-IS)   양(量) 중심의 출원",
+      rows: ["OFFen 상품성 향상 및 기술평가 목적의 다수 출원 추진", "발명 선별 기준 부재 — 사업 기여도와 무관한 출원 혼재", "직무발명보상금 지급 기준 미정립", "특허 연차료 및 해외 출원 관리 체계 부재"] },
+    { x: MX + colW + 0.33, fill: BLUE, t: "개선 (TO-BE)   가치 중심의 선별·보상",
+      rows: ["사업 기여도가 높은 발명을 선별하여 집중 지원", "직무발명보상금 지급 기준 정립 (A·B·C 등급제)", "특허 연차료 관리 — 등급별 유지·포기 판단", "해외 출원 검토 — 조약우선권 기한 내 의사결정"] },
   ];
-  txt(s, "위원 구성 (총 6인)", { x: M, y: 1.30, w: 5, h: 0.28, fontSize: 13, bold: true, color: NAVY });
-  mem.forEach((m, i) => {
-    const x = M + i * 2.036;
-    card(s, { x, y: 1.64, w: 1.913, h: 1.56 });
-    s.addShape(pres.ShapeType.ellipse, { x: x + 0.677, y: 1.86, w: 0.56, h: 0.56, fill: { color: i === 5 ? GOLD : NAVY }, line: { color: i === 5 ? GOLD : NAVY } });
-    txt(s, m[0].charAt(0), { x: x + 0.677, y: 1.86, w: 0.56, h: 0.56, fontSize: 17, bold: true, color: WHITE, align: "center", valign: "middle" });
-    txt(s, m[0], { x: x + 0.11, y: 2.54, w: 1.693, h: 0.3, fontSize: 14, bold: true, color: NAVY, align: "center" });
-    txt(s, m[1], { x: x + 0.11, y: 2.85, w: 1.693, h: 0.26, fontSize: 10.5, color: MUTED, align: "center" });
+  cols.forEach((c) => {
+    hbar(s, { x: c.x, y: 2.16, w: colW, t: c.t, fill: c.fill });
+    c.rows.forEach((r, i) => {
+      const y = 2.70 + i * 0.68;
+      wbox(s, { x: c.x, y, w: colW, h: 0.58 });
+      txt(s, r, { x: c.x + 0.22, y, w: colW - 0.44, h: 0.58, fontSize: 11, color: TXT, valign: "middle" });
+    });
   });
-  txt(s, "운영 방식", { x: M, y: 3.44, w: 5, h: 0.28, fontSize: 13, bold: true, color: NAVY });
-  const ops = [
-    ["개최", "안건 발생 시 수시 개최"],
-    ["진행", "아이디어 발표 15분 + 질의응답 10분"],
-    ["의결", "재적위원 과반수 출석, 출석위원 과반수 찬성\n(가부동수 시 위원장 결정)"],
-  ];
-  ops.forEach((o, i) => {
-    const x = M + i * 4.131;
-    card(s, { x, y: 3.78, w: 3.83, h: 1.30 });
-    s.addShape(pres.ShapeType.roundRect, { x: x + 0.28, y: 4.00, w: 0.72, h: 0.34, rectRadius: 0.08, fill: { color: "EEF2F8" }, line: { color: "D7DFEC", width: 1 } });
-    txt(s, o[0], { x: x + 0.28, y: 4.00, w: 0.72, h: 0.34, fontSize: 11, bold: true, color: NAVY, align: "center", valign: "middle" });
-    txt(s, o[1], { x: x + 0.28, y: 4.46, w: 3.27, h: 0.56, fontSize: 11.5, color: TEXT, lineSpacing: 16 });
-  });
-  card(s, { x: M, y: 5.28, w: CW, h: 0.92, fill: "EEF2F8", line: "D7DFEC" });
-  txt(s, [
-    { text: "역할  ", options: { fontSize: 11, bold: true, color: GOLD_D } },
-    { text: "직무발명의 승계·출원 여부 의결  ·  보상 등급(A/B/C) 결정  ·  기존 지식재산권의 연차료 및 유지·포기 판단  ·  해외 출원 대상 선정", options: { fontSize: 12, color: NAVY } },
-  ], { x: M + 0.34, y: 5.28, w: CW - 0.68, h: 0.92, valign: "middle", lineSpacing: 18 });
-  txt(s, "※ 본 특허심의위원회는 「발명진흥법」 제17조의 직무발명심의위원회(이의 제기 심의 기구)와는 별개의 사내 의사결정 기구입니다.", { x: M, y: 6.36, w: CW, h: 0.3, fontSize: 9.5, color: MUTED });
+  band(s, 5.62, null, "발명 신고부터 보상·해외 출원까지 문서로 증빙되는 절차 확립 → 상장 심사·기술평가·정부 R&D 대응이 가능한 지식재산 관리 체계", 0.52);
+  txt(s, "※ 특허심의위원회는 발명의 승계·출원 여부와 보상 등급을 함께 의결하여, 선별과 보상이 하나의 절차로 연결되도록 합니다.", { x: MX, y: 6.38, w: CW, h: 0.28, fontSize: 9.5, color: MUTED });
 }
 
-/* ─── 06 개선 프로세스 ─────────────────────────────────── */
+/* ── 5. 법적 근거 ────────────────────────────────────── */
 {
-  const s = base("개선된 특허 출원·등록 프로세스", "PROCESS");
-  const steps = [
-    ["1", "발명신고서 제출", "발명자 → 연구기획팀\n「발명진흥법」 제12조"],
-    ["2", "특허심의위원회 심의", "대면 발표 15분 + Q&A 10분\n가결 시 보상 등급 동시 결정"],
-    ["3", "출원 · 등록", "가결 건은 특허법률사무소\n(주)차원에 의뢰"],
-    ["4", "양도계약서 날인", "특허를 받을 수 있는 권리 및\n특허권 일체를 회사로 이전"],
-    ["5", "직무발명 보상금 지급", "보상규정(안)에 따라\n등급별 출원·등록보상금 지급"],
-    ["6", "해외 출원 여부 결정", "국내 출원일부터 12개월 이내\n(조약우선권 주장 기한)"],
-  ];
-  steps.forEach((st, i) => {
-    const x = M + (i % 3) * 4.131, y = 1.40 + Math.floor(i / 3) * 1.86;
-    card(s, { x, y, w: 3.83, h: 1.62 });
-    s.addShape(pres.ShapeType.roundRect, { x: x + 0.26, y: y + 0.26, w: 0.5, h: 0.5, rectRadius: 0.1, fill: { color: NAVY }, line: { color: NAVY } });
-    txt(s, st[0], { x: x + 0.26, y: y + 0.26, w: 0.5, h: 0.5, fontSize: 15, bold: true, color: GOLD, align: "center", valign: "middle" });
-    txt(s, st[1], { x: x + 0.88, y: y + 0.30, w: 2.73, h: 0.42, fontSize: 13.5, bold: true, color: NAVY, valign: "middle" });
-    txt(s, st[2], { x: x + 0.26, y: y + 0.92, w: 3.35, h: 0.56, fontSize: 11, color: TEXT, lineSpacing: 16 });
-    if (i % 3 !== 2) txt(s, "▶", { x: x + 3.83, y: y + 0.62, w: 0.24, h: 0.34, fontSize: 11, color: GOLD, align: "center", valign: "middle" });
-  });
-  card(s, { x: M, y: 5.20, w: CW, h: 1.02, fill: "EEF2F8", line: "D7DFEC" });
-  txt(s, [
-    { text: "※ 양도계약서는 발명자가 퇴사 후 해당 발명에 대해 권리를 주장하는 것을 방지하고, 출원·등록 절차에 필요한 협력 의무를 확보하기 위한 것입니다.", options: { fontSize: 10.5, color: NAVY, breakLine: true } },
-    { text: "※ 출원 전까지 발명 내용은 비밀유지 대상입니다. (「발명진흥법」 제19조) — 논문·학회·전시 등 사전 공개 시 신규성 상실로 등록이 거절될 수 있습니다.", options: { fontSize: 10.5, color: NAVY } },
-  ], { x: M + 0.34, y: 5.20, w: CW - 0.68, h: 1.02, valign: "middle", lineSpacing: 18 });
-}
-
-/* ─── 07 보상 체계 ─────────────────────────────────────── */
-{
-  const s = base("직무발명 보상규정(안) — 보상 체계", "COMPENSATION");
-  const hdr = { fill: NAVY, color: WHITE, bold: true, fontSize: 12, align: "center", valign: "middle" };
-  const c = (t, o) => Object.assign({ text: t, options: Object.assign({ fontFace: F, fontSize: 11.5, color: TEXT, valign: "middle", align: "center" }, o || {}) });
+  const s = page("추진 배경", "법적 근거 및 사내 이행 사항",
+    "특허심의위원회는 「발명진흥법」이 사용자에게 요구하는 권리 승계 통지, 정당한 보상, 비밀유지 의무를 사내 절차로 이행하기 위한 기구입니다.\n각 조문별 이행 사항은 다음과 같으며, 관련 서식은 모두 초안 작성을 완료하였습니다.", 4);
+  const hd = { fill: TBLHD, bold: true, color: NAVY, fontSize: 11.5 };
   const rows = [
-    [c("보상 종류", hdr), c("지급 시기", hdr), c("A등급", hdr), c("B등급", hdr), c("C등급", hdr)],
-    [c("출원보상금", { bold: true, color: NAVY, align: "left" }), c("국내 출원일"), c("150만원", { bold: true, color: GOLD_D }), c("100만원"), c("50만원")],
-    [c("등록보상금", { bold: true, color: NAVY, align: "left" }), c("국내 등록일"), c("150만원", { bold: true, color: GOLD_D }), c("100만원"), c("50만원")],
-    [c("출원유보보상금", { bold: true, color: NAVY, align: "left" }), c("유보·포기 결정일"), c("75만원", { bold: true, color: GOLD_D }), c("50만원"), c("25만원")],
-    [c("해외출원보상금", { bold: true, color: NAVY, align: "left" }), c("해외 출원일"), c("50만원 / 국가   (등급 무관)", { colspan: 3, fill: "EEF2F8", bold: true, color: NAVY })],
-    [c("처분·실시보상금", { bold: true, color: NAVY, align: "left" }), c("수익 발생 연도 종료 후 3개월 내"), c("순수익의 10%   (등급 무관)", { colspan: 3, fill: "EEF2F8", bold: true, color: NAVY })],
+    [cell("조   문", hd), cell("주요 내용", hd), cell("사내 이행 사항", hd)],
+    [cell("제12조\n직무발명 완성사실의 통지", { bold: true, color: NAVY, fontSize: 10.5 }), cell("종업원은 직무발명을 완성한 경우 지체 없이 사용자에게 문서로 통지", { align: "left" }), cell("직무발명 신고서 제출", { color: BLUE, bold: true })],
+    [cell("제13조\n승계 여부의 통지", { bold: true, color: NAVY, fontSize: 10.5 }), cell("승계 규정이 있는 경우 발명 완성 시 권리 승계, 미승계 시 4개월 이내 서면 통지 (시행령 제7조)", { align: "left" }), cell("위원회 심의 및 결과 통지", { color: BLUE, bold: true })],
+    [cell("제15조\n직무발명에 대한 보상", { bold: true, color: NAVY, fontSize: 10.5 }), cell("권리 승계 시 정당한 보상, 보상 기준은 종업원과 협의하여 규정으로 정함", { align: "left" }), cell("직무발명 보상규정(안) 제정", { color: BLUE, bold: true })],
+    [cell("제16조\n출원 유보 시의 보상", { bold: true, color: NAVY, fontSize: 10.5 }), cell("승계 후 출원하지 않거나 출원을 포기·취하한 경우에도 정당한 보상", { align: "left" }), cell("출원유보보상금 지급", { color: BLUE, bold: true })],
+    [cell("제19조\n비밀유지의 의무", { bold: true, color: NAVY, fontSize: 10.5 }), cell("사용자가 출원할 때까지 발명 내용의 비밀유지 (위반 시 제58조 벌칙)", { align: "left" }), cell("신고서 서약 · 양도계약 제7조", { color: BLUE, bold: true })],
   ];
-  s.addTable(rows, {
-    x: M, y: 1.40, w: CW, colW: [2.55, 3.15, 2.13, 2.13, 2.13], rowH: 0.52,
-    border: { type: "solid", color: LINE, pt: 1 }, fill: { color: WHITE }, fontFace: F,
+  s.addTable(rows, { x: MX, y: 2.14, w: CW, colW: [2.35, 5.68, 3.30], rowH: 0.56, border: TB, fill: { color: WHITE }, fontFace: F });
+  note(s, 5.86, "※ 사전 승계 규정이 있는 경우 권리는 발명을 완성한 때부터 회사에 승계되며, 접수일부터 4개월 이내에 미승계 사실을 통지하지 않으면 승계한 것으로 처리됩니다.\n※ 보상에 이의가 있는 경우에는 「발명진흥법」 제17조에 따른 직무발명심의위원회를 별도로 구성하여 심의합니다. (특허심의위원회와 별개 기구)", 0.78);
+}
+
+/* ── 6. 위원회 구성 및 운영 ──────────────────────────── */
+{
+  const s = page("위원회 운영", "구성 및 운영 방안",
+    "위원회는 대표이사를 포함한 6인으로 구성하며, 연구기획팀이 간사를 맡아 안건 접수·심의 준비·결과 통지를 담당합니다.\n안건 발생 시 수시로 개최하여 발명의 승계·출원 여부와 보상 등급을 함께 의결합니다.", 5);
+  pill(s, 2.14, "특허심의위원회 위원 구성 (총 6인)");
+  const mem = [["이성권", "대표이사"], ["전성학", "부사장"], ["최창진", "이사"], ["이정민", "실장"], ["이태우", "이사"], ["배준호", "연구원 (간사)"]];
+  const mw = (CW - 5 * 0.16) / 6;
+  mem.forEach((m, i) => {
+    const x = MX + i * (mw + 0.16);
+    const dark = i === 0, blue = i === 1;
+    wbox(s, { x, y: 2.74, w: mw, h: 0.86, fill: dark ? NAVY : blue ? BLUE : WHITE, line: dark ? NAVY : blue ? BLUE : LINE });
+    txt(s, m[0], { x, y: 2.86, w: mw, h: 0.3, fontSize: 13, bold: true, color: dark || blue ? WHITE : NAVY, align: "center" });
+    txt(s, m[1], { x, y: 3.16, w: mw, h: 0.26, fontSize: 9.5, color: dark || blue ? "C6D2EA" : MUTED, align: "center" });
   });
+  const ops = [
+    ["개   최", "안건 발생 시 수시 개최\n연구기획팀이 안건을 접수·상정"],
+    ["진   행", "아이디어 발표 15분\n질의응답 10분"],
+    ["의   결", "재적위원 과반수 출석, 출석위원 과반수 찬성\n가부동수인 경우 위원장이 결정"],
+  ];
+  const ow = (CW - 2 * 0.25) / 3;
+  ops.forEach((o, i) => {
+    const x = MX + i * (ow + 0.25);
+    hbar(s, { x, y: 3.94, w: ow, t: o[0] });
+    wbox(s, { x, y: 4.36, w: ow, h: 0.86 });
+    txt(s, o[1], { x: x + 0.18, y: 4.36, w: ow - 0.36, h: 0.86, fontSize: 10.5, color: TXT, valign: "middle", lineSpacing: 16 });
+  });
+  note(s, 5.52, [
+    { text: "위원회 역할   ", options: { bold: true, color: NAVY } },
+    { text: "직무발명의 승계·출원 여부 의결   ·   보상 등급(A·B·C) 결정   ·   기 보유 지식재산권의 연차료 및 유지·포기 판단   ·   해외 출원 대상 선정" },
+  ], 0.56);
+  txt(s, "※ 본 특허심의위원회는 「발명진흥법」 제17조의 직무발명심의위원회(보상 이의 제기 심의 기구)와는 별개의 사내 의사결정 기구입니다.", { x: MX, y: 6.30, w: CW, h: 0.28, fontSize: 9.5, color: MUTED });
+}
+
+/* ── 7. 개선 프로세스 ────────────────────────────────── */
+{
+  const s = page("위원회 운영", "개선된 특허 출원·등록 프로세스",
+    "발명 신고에서 해외 출원 결정까지 6단계로 표준화하고, 각 단계의 산출물과 기한을 연구기획팀이 관리합니다.\n특히 양도계약서 날인 단계를 신설하여, 퇴사 이후의 권리 분쟁 소지를 사전에 차단합니다.", 6);
+  band(s, 2.14, "1", "발명 신고 → 심의 → 출원·등록 → 양도계약 → 보상 → 해외 출원 (6단계)");
+  const st = [
+    ["① 발명신고서 제출", "발명자 → 연구기획팀\n발명진흥법 제12조"],
+    ["② 위원회 심의", "대면 발표 15분\n가결 시 등급 결정"],
+    ["③ 출원 · 등록", "특허법률사무소\n(주)차원에 의뢰"],
+    ["④ 양도계약 날인", "권리 일체를\n회사로 이전"],
+    ["⑤ 보상금 지급", "등급별 출원 ·\n등록보상금 지급"],
+    ["⑥ 해외 출원 결정", "국내 출원일부터\n12개월 이내"],
+  ];
+  const sw = (CW - 5 * 0.22) / 6;
+  st.forEach((v, i) => {
+    const x = MX + i * (sw + 0.22);
+    hbar(s, { x, y: 2.86, w: sw, h: 0.44, t: v[0], fs: 10.5 });
+    wbox(s, { x, y: 3.30, w: sw, h: 1.02 });
+    txt(s, v[1], { x: x + 0.10, y: 3.30, w: sw - 0.20, h: 1.02, fontSize: 9.5, color: TXT, align: "center", valign: "middle", lineSpacing: 15 });
+    if (i < 5) txt(s, "▶", { x: x + sw, y: 2.86, w: 0.22, h: 0.44, fontSize: 10, color: BLUE, align: "center", valign: "middle" });
+  });
+  const kv = [
+    ["산출물", "발명신고서 · 등급 평가표 · 심의 결과 통지서 · 특허권 양도계약서"],
+    ["기   한", "승계 여부 통지 4개월 이내 (제13조) · 해외 출원 12개월 이내 (조약우선권)"],
+    ["유의사항", "출원 전까지 발명 내용은 비밀유지 대상이며, 논문·학회·전시 등 사전 공개 시 신규성 상실로 등록이 거절될 수 있습니다. (제19조)"],
+  ];
+  kv.forEach((r, i) => {
+    const y = 4.66 + i * 0.56;
+    rect(s, { x: MX, y, w: 1.35, h: 0.56, fill: { color: TBLHD }, line: { color: LINE, width: 1 } });
+    txt(s, r[0], { x: MX, y, w: 1.35, h: 0.56, fontSize: 10.5, bold: true, color: NAVY, align: "center", valign: "middle" });
+    wbox(s, { x: MX + 1.35, y, w: CW - 1.35, h: 0.56 });
+    txt(s, r[1], { x: MX + 1.55, y, w: CW - 1.75, h: 0.56, fontSize: 10.5, color: TXT, valign: "middle" });
+  });
+  txt(s, "※ 양도계약서는 발명자가 퇴사 후 해당 발명에 대해 권리를 주장하는 것을 방지하고, 출원·등록 절차에 필요한 협력 의무를 확보하기 위한 것입니다.", { x: MX, y: 6.44, w: CW, h: 0.28, fontSize: 9.5, color: MUTED });
+}
+
+/* ── 8. 보상 체계 ────────────────────────────────────── */
+{
+  const s = page("보상 기준", "직무발명 보상규정(안)",
+    "「발명진흥법」 제15조에 따라 보상의 종류·금액·지급 방법을 규정으로 정하고, 심의 시 결정된 등급(A·B·C)에 따라 차등 지급합니다.\n아래 금액은 특허 1건 기준이며, 발명자가 2명 이상인 경우 발명신고서에 기재된 기여율로 분배합니다.", 7);
+  pill(s, 2.12, "보상의 종류 및 금액 (특허 1건 기준)");
+  const hd = { fill: BLUE, bold: true, color: WHITE, fontSize: 11.5 };
+  const nm = { bold: true, color: NAVY, align: "left", fontSize: 11 };
+  const rows = [
+    [cell("보상 종류", hd), cell("지급 시기", hd), cell("A등급", hd), cell("B등급", hd), cell("C등급", hd)],
+    [cell("출원보상금", nm), cell("국내 출원일"), cell("150만원", { bold: true, color: BLUE }), cell("100만원"), cell("50만원")],
+    [cell("등록보상금", nm), cell("국내 등록일"), cell("150만원", { bold: true, color: BLUE }), cell("100만원"), cell("50만원")],
+    [cell("출원유보보상금", nm), cell("유보·포기 결정일"), cell("75만원", { bold: true, color: BLUE }), cell("50만원"), cell("25만원")],
+    [cell("해외출원보상금", nm), cell("해외 출원일"), cell("국가당 50만원  (등급 무관)", { colspan: 3, fill: SOFT, bold: true, color: NAVY })],
+    [cell("처분·실시보상금", nm), cell("수익 발생 연도 종료 후 3개월 내"), cell("순수익의 10%  (등급 무관)", { colspan: 3, fill: SOFT, bold: true, color: NAVY })],
+  ];
+  s.addTable(rows, { x: MX, y: 2.68, w: CW, colW: [2.35, 3.10, 1.96, 1.96, 1.96], rowH: 0.50, border: TB, fill: { color: WHITE }, fontFace: F });
   const notes = [
-    ["1건 기준", "발명자가 2명 이상인 경우 발명신고서의 기여율에 따라 분배하며, 합계액은 건당 보상액을 초과하지 않습니다."],
-    ["출원보상금", "등록 여부와 무관하게 지급하며, 등록 거절·취하 시에도 회수하지 않습니다."],
-    ["해외출원보상금", "발명자 1인당 연간 2개국 한도, 원칙적으로 A등급 발명을 우선 검토합니다."],
-    ["세무 처리", "「소득세법」 제12조제3호 어목에 따라 연간 700만원까지 비과세 (지배주주 등 특수관계인 임원 제외)"],
+    ["출원보상금", "등록 여부와 무관하게 지급하며, 등록 거절·취하 시에도 회수하지 않습니다. 분할·계속출원에 대하여는 중복 지급하지 않습니다."],
+    ["해외출원보상금", "발명자 1인당 연간 2개국을 한도로 하며, 원칙적으로 A등급 발명을 우선 검토합니다."],
+    ["세무 처리", "「소득세법」 제12조제3호 어목에 따라 연간 700만원까지 비과세되며, 지급 전 해당 연도 누적 지급액을 확인합니다."],
   ];
   notes.forEach((n, i) => {
-    const y = 4.66 + i * 0.44;
-    s.addShape(pres.ShapeType.roundRect, { x: M, y: y + 0.02, w: 1.62, h: 0.32, rectRadius: 0.07, fill: { color: "EEF2F8" }, line: { color: "D7DFEC", width: 1 } });
-    txt(s, n[0], { x: M, y: y + 0.02, w: 1.62, h: 0.32, fontSize: 10, bold: true, color: NAVY, align: "center", valign: "middle" });
-    txt(s, n[1], { x: M + 1.78, y: y + 0.02, w: CW - 1.78, h: 0.32, fontSize: 10.5, color: TEXT, valign: "middle" });
+    const y = 5.76 + i * 0.38;
+    rect(s, { x: MX, y, w: 1.55, h: 0.30, fill: { color: TBLHD }, line: { color: LINE, width: 1 } });
+    txt(s, n[0], { x: MX, y, w: 1.55, h: 0.30, fontSize: 10, bold: true, color: NAVY, align: "center", valign: "middle" });
+    txt(s, n[1], { x: MX + 1.75, y, w: CW - 1.75, h: 0.30, fontSize: 10, color: TXT, valign: "middle" });
   });
 }
 
-/* ─── 08 등급 결정 기준 ────────────────────────────────── */
+/* ── 9. 등급 결정 기준 ───────────────────────────────── */
 {
-  const s = base("보상 등급 결정 기준 (규정(안) 제6조)", "GRADING");
-  txt(s, "평가 항목 — 각 항목 1~5점, 20점 만점", { x: M, y: 1.34, w: 7, h: 0.28, fontSize: 13, bold: true, color: NAVY });
+  const s = page("보상 기준", "보상 등급 결정 기준",
+    "각 위원이 4개 항목을 1~5점으로 채점하고, 위원 채점의 평균값(소수점 첫째 자리 반올림)을 합계 점수로 하여 등급을 결정합니다.\n등급 결정 결과와 항목별 점수는 심의 결과 통지서에 기재하여 발명자에게 서면으로 통지합니다.", 8);
+  const LW = 6.70, RX = MX + LW + 0.33, RW = CW - LW - 0.33;
+  pill(s, 2.14, "평가 항목 (각 1~5점 · 20점 만점)", MX, LW);
   const crit = [
-    ["①", "사업 연관성", "자사 제품·서비스(OFFen 등)에 이미 적용되었거나 적용이 확정되어 있는가"],
-    ["②", "권리 활용성", "회피설계가 어렵고, 제3자의 침해를 외부에서 탐지·입증할 수 있는가"],
-    ["③", "기술 독창성", "선행기술 대비 차별성이 뚜렷하고 등록 가능성이 높은가"],
-    ["④", "대외 활용 가치", "기술평가·인증·정부사업 가점·국가 R&D 성과 활용 가치가 있는가"],
+    ["① 사업 연관성", "자사 제품·서비스(OFFen 등)에 이미 적용되었거나\n적용이 확정되어 있는가"],
+    ["② 권리 활용성", "회피설계가 어렵고, 제3자의 침해를 외부에서\n탐지·입증할 수 있는가"],
+    ["③ 기술 독창성", "선행기술 대비 차별성이 뚜렷하고\n등록 가능성이 높은가"],
+    ["④ 대외 활용 가치", "기술평가·인증·정부사업 가점·국가 R&D 성과로\n활용할 수 있는가"],
   ];
-  crit.forEach((cr, i) => {
-    const y = 1.72 + i * 0.98;
-    card(s, { x: M, y, w: 7.5, h: 0.84 });
-    txt(s, cr[0], { x: M + 0.24, y: y + 0.22, w: 0.4, h: 0.4, fontSize: 15, bold: true, color: GOLD, align: "center", valign: "middle" });
-    txt(s, cr[1], { x: M + 0.72, y: y + 0.14, w: 2.1, h: 0.3, fontSize: 13, bold: true, color: NAVY });
-    txt(s, cr[2], { x: M + 0.72, y: y + 0.45, w: 5.5, h: 0.3, fontSize: 10.5, color: TEXT });
-    s.addShape(pres.ShapeType.roundRect, { x: M + 6.62, y: y + 0.22, w: 0.64, h: 0.4, rectRadius: 0.08, fill: { color: "EEF2F8" }, line: { color: "D7DFEC", width: 1 } });
-    txt(s, "5점", { x: M + 6.62, y: y + 0.22, w: 0.64, h: 0.4, fontSize: 10.5, bold: true, color: NAVY, align: "center", valign: "middle" });
+  crit.forEach((c, i) => {
+    const y = 2.74 + i * 0.78;
+    rect(s, { x: MX, y, w: 1.62, h: 0.70, fill: { color: TBLHD }, line: { color: LINE, width: 1 } });
+    txt(s, c[0], { x: MX, y, w: 1.62, h: 0.70, fontSize: 10.5, bold: true, color: NAVY, align: "center", valign: "middle" });
+    wbox(s, { x: MX + 1.62, y, w: LW - 1.62 - 0.72, h: 0.70 });
+    txt(s, c[1], { x: MX + 1.80, y, w: LW - 2.60, h: 0.70, fontSize: 10, color: TXT, valign: "middle", lineSpacing: 14 });
+    rect(s, { x: MX + LW - 0.72, y, w: 0.72, h: 0.70, fill: { color: WHITE }, line: { color: LINE, width: 1 } });
+    txt(s, "5점", { x: MX + LW - 0.72, y, w: 0.72, h: 0.70, fontSize: 10.5, bold: true, color: BLUE, align: "center", valign: "middle" });
   });
-  const rx = M + 7.8, rw = CW - 7.8;
-  txt(s, "등급 환산", { x: rx, y: 1.34, w: 4, h: 0.28, fontSize: 13, bold: true, color: NAVY });
-  const grades = [
-    ["A", "16점 이상", "핵심 특허", "해외 출원 및 사업화 연계 우선 검토", GOLD],
-    ["B", "11 ~ 15점", "사업 연계 특허", "자사 제품·서비스와 직접 연관", "2C5282"],
-    ["C", "10점 이하", "방어·포트폴리오 특허", "기술평가 및 권리 방어 목적", MUTED],
+  pill(s, 2.14, "등급 환산", RX, RW);
+  const gr = [
+    ["A", "16점 이상", "핵심 특허", "해외 출원 및 사업화 연계 우선 검토", NAVY, WHITE],
+    ["B", "11 ~ 15점", "사업 연계 특허", "자사 제품·서비스와 직접 연관", BLUE, WHITE],
+    ["C", "10점 이하", "방어·포트폴리오 특허", "기술평가 및 권리 방어 목적", WHITE, NAVY],
   ];
-  grades.forEach((g, i) => {
-    const y = 1.72 + i * 1.31;
-    card(s, { x: rx, y, w: rw, h: 1.17 });
-    s.addShape(pres.ShapeType.roundRect, { x: rx + 0.26, y: y + 0.31, w: 0.56, h: 0.56, rectRadius: 0.1, fill: { color: g[4] }, line: { color: g[4] } });
-    txt(s, g[0], { x: rx + 0.26, y: y + 0.31, w: 0.56, h: 0.56, fontSize: 18, bold: true, color: WHITE, align: "center", valign: "middle" });
-    txt(s, g[1], { x: rx + 0.96, y: y + 0.20, w: 2.6, h: 0.28, fontSize: 12.5, bold: true, color: NAVY });
-    txt(s, g[2], { x: rx + 0.96, y: y + 0.50, w: 2.6, h: 0.26, fontSize: 11, bold: true, color: g[4] === GOLD ? GOLD_D : g[4] });
-    txt(s, g[3], { x: rx + 0.96, y: y + 0.76, w: 3.1, h: 0.3, fontSize: 10, color: MUTED });
+  gr.forEach((g, i) => {
+    const y = 2.74 + i * 1.04;
+    const solid = g[4] !== WHITE;
+    wbox(s, { x: RX, y, w: RW, h: 0.94, fill: g[4], line: solid ? g[4] : LINE });
+    txt(s, g[0], { x: RX + 0.16, y: y + 0.20, w: 0.54, h: 0.54, fontSize: 22, bold: true, color: solid ? WHITE : BLUE, align: "center", valign: "middle" });
+    txt(s, g[1] + "   " + g[2], { x: RX + 0.84, y: y + 0.18, w: RW - 1.0, h: 0.28, fontSize: 12, bold: true, color: solid ? WHITE : NAVY });
+    txt(s, g[3], { x: RX + 0.84, y: y + 0.48, w: RW - 1.0, h: 0.28, fontSize: 9.5, color: solid ? "C6D2EA" : MUTED });
   });
-  txt(s, "※ 각 위원이 항목별로 채점하고 위원 채점의 평균값(소수점 첫째 자리 반올림)으로 등급을 결정하며, 등급 결정 결과와 항목별 점수는 발명자에게 서면 통지합니다.", { x: M, y: 5.72, w: CW, h: 0.3, fontSize: 9.5, color: MUTED });
+  note(s, 6.00, "※ 2점·4점도 부여할 수 있으며, 위 문구는 판단 기준선입니다.   ※ 등급 판정에 위원 간 이견이 있는 경우 위원장이 최종 결정하며, 등록 시점에 사업 적용 상황이 현저히 변경된 경우 의결로 1개 등급 범위에서 조정할 수 있습니다.", 0.56);
 }
 
-/* ─── 09 정비 서식 4종 ─────────────────────────────────── */
+/* ── 10. 서식 정비 ───────────────────────────────────── */
 {
-  const s = base("정비 완료 서식 4종", "DOCUMENTS");
+  const s = page("보상 기준", "규정 및 서식 4종 정비", 
+    "위원회 운영에 필요한 규정과 서식은 모두 초안 작성을 완료하였으며, 승인 후 사내 규정으로 확정하고자 합니다.\n각 서식은 「발명진흥법」의 요구 사항과 사내 절차 단계에 1:1로 대응하도록 구성하였습니다.", 9);
   const docs = [
-    ["01", "직무발명 신고서", "발명진흥법 제12조", "발명 완성사실 통지 · 발명자와 기여율 확정 · 외부 공개 이력 및 국가 R&D 연계 확인"],
-    ["02", "직무발명 보상규정(안)", "발명진흥법 제15조", "보상의 종류·금액·지급 방법 규정 · 등급(A/B/C) 및 세무 처리 기준 명문화"],
-    ["03", "직무발명 등급 평가표", "보상규정(안) 제6조", "위원별 채점지 · 항목별 점수 기준 · 가결/부결/보류 의견 및 사유 기재"],
-    ["04", "특허권 양도계약서", "발명진흥법 제13조", "권리 승계 확인 · 퇴사 후 권리 주장 방지 · 절차 협력 및 비밀유지 의무 확보"],
+    ["직무발명 신고서", "발명진흥법 제12조", "발명 완성사실 통지\n발명자 및 기여율 확정\n외부 공개 이력 확인\n국가 R&D 연계 여부 확인"],
+    ["직무발명 보상규정(안)", "발명진흥법 제15조", "보상의 종류·금액 규정\n지급 시기 및 방법\n등급(A·B·C) 기준\n세무 처리 및 퇴직자 보상"],
+    ["직무발명 등급 평가표", "보상규정(안) 제6조", "위원별 채점지\n항목별 점수 기준 제시\n가결·부결·보류 의견\n부결 사유 체크리스트"],
+    ["특허권 양도계약서", "발명진흥법 제13조", "권리 승계 사실 확인\n퇴사 후 권리 주장 방지\n출원·등록 협력 의무\n비밀유지 의무 (퇴직 후 유효)"],
   ];
+  const dw = (CW - 3 * 0.25) / 4;
   docs.forEach((d, i) => {
-    const x = M + i * 3.084;
-    card(s, { x, y: 1.44, w: 2.84, h: 3.46 });
-    s.addShape(pres.ShapeType.roundRect, { x: x + 0.28, y: 1.74, w: 0.54, h: 0.54, rectRadius: 0.1, fill: { color: NAVY }, line: { color: NAVY } });
-    txt(s, d[0], { x: x + 0.28, y: 1.74, w: 0.54, h: 0.54, fontSize: 13, bold: true, color: GOLD, align: "center", valign: "middle" });
-    txt(s, d[1], { x: x + 0.28, y: 2.48, w: 2.28, h: 0.6, fontSize: 14, bold: true, color: NAVY, lineSpacing: 20 });
-    s.addShape(pres.ShapeType.roundRect, { x: x + 0.28, y: 3.14, w: 1.86, h: 0.3, rectRadius: 0.07, fill: { color: "EEF2F8" }, line: { color: "D7DFEC", width: 1 } });
-    txt(s, d[2], { x: x + 0.28, y: 3.14, w: 1.86, h: 0.3, fontSize: 9.5, bold: true, color: NAVY, align: "center", valign: "middle" });
-    txt(s, d[3], { x: x + 0.28, y: 3.60, w: 2.28, h: 1.1, fontSize: 10.5, color: TEXT, lineSpacing: 16 });
+    const x = MX + i * (dw + 0.25);
+    hbar(s, { x, y: 2.16, w: dw, h: 0.46, t: d[0], fs: 12 });
+    wbox(s, { x, y: 2.62, w: dw, h: 1.94 });
+    rect(s, { x: x + 0.20, y: 2.82, w: dw - 0.40, h: 0.34, fill: { color: TBLHD }, line: { color: LINE, width: 1 } });
+    txt(s, d[1], { x: x + 0.20, y: 2.82, w: dw - 0.40, h: 0.34, fontSize: 9.5, bold: true, color: NAVY, align: "center", valign: "middle" });
+    txt(s, d[2], { x: x + 0.24, y: 3.30, w: dw - 0.48, h: 1.12, fontSize: 10, color: TXT, lineSpacing: 17 });
   });
-  card(s, { x: M, y: 5.16, w: CW, h: 1.0, fill: NAVY, line: NAVY });
-  txt(s, [
-    { text: "검토 필요   ", options: { fontSize: 11, bold: true, color: GOLD } },
-    { text: "4종 모두 초안 작성 완료 — 승인 후 사내 규정으로 확정하고, 보상규정(안)은 임직원 협의를 거쳐 시행합니다.", options: { fontSize: 12.5, color: WHITE } },
-  ], { x: M + 0.34, y: 5.16, w: CW - 0.68, h: 1.0, valign: "middle", lineSpacing: 18 });
+  band(s, 4.90, null, "4종 모두 초안 작성 완료 — 승인 후 사내 규정으로 확정하고, 보상규정(안)은 임직원 협의를 거쳐 시행", 0.52);
+  note(s, 5.72, [
+    { text: "규정 제정 절차   ", options: { bold: true, color: NAVY } },
+    { text: "「발명진흥법」 제15조제3항에 따라 보상 규정의 작성·변경은 임직원과 협의하여야 하며, 임직원에게 불리하게 변경하는 경우에는 적용 대상 임직원 과반수의 동의가 필요합니다.", options: { breakLine: true } },
+    { text: "시행 시점   ", options: { bold: true, color: NAVY } },
+    { text: "시행일 이후 신고된 직무발명부터 적용하되, 시행일 현재 출원 중이거나 등록된 직무발명에 대하여는 위원회 의결로 적용할 수 있습니다." },
+  ], 0.80);
 }
 
-/* ─── 10 제1회 안건 ───────────────────────────────────── */
+/* ── 11. 제1회 안건 ──────────────────────────────────── */
 {
-  const s = base("제1회 특허심의위원회 안건", "AGENDA (1st)");
+  const s = page("제1회 위원회", "안건 및 특이사항",
+    "제1회 위원회에서는 운영 방안과 보상 기준을 확정하고, 기 보유 지식재산권의 기한을 공유한 뒤 첫 발명 심의를 진행합니다.\n제품개발팀 강충현 연구원의 아이디어는 대표님 구두 컨펌이 완료된 건으로, 정식 심의 절차를 거쳐 승계·출원 여부를 의결합니다.", 10);
+  band(s, 2.14, "1", "제1회 특허심의위원회 안건 (4건)");
   const ag = [
     ["01", "특허심의위원회 추진 목적 및 운영 방안", "설치 배경 · 위원 구성 · 의결 방식 확정"],
     ["02", "기 보유 지식재산권 마감일 알림", "특허 / 출원 건별 연차료 및 기한 공유"],
     ["03", "직무발명보상금 기준(안) 검토", "보상규정(안) 및 등급 평가표 심의"],
     ["04", "제품개발팀 강충현 연구원 아이디어 발표", "발표 15분 + 질의응답 10분 · 승계 여부 의결"],
   ];
+  const LW2 = 7.30;
   ag.forEach((a, i) => {
-    const y = 1.42 + i * 1.06;
-    card(s, { x: M, y, w: 8.3, h: 0.92 });
-    s.addShape(pres.ShapeType.roundRect, { x: M + 0.24, y: y + 0.21, w: 0.5, h: 0.5, rectRadius: 0.1, fill: { color: NAVY }, line: { color: NAVY } });
-    txt(s, a[0], { x: M + 0.24, y: y + 0.21, w: 0.5, h: 0.5, fontSize: 13, bold: true, color: GOLD, align: "center", valign: "middle" });
-    txt(s, a[1], { x: M + 0.88, y: y + 0.17, w: 7.2, h: 0.3, fontSize: 13.5, bold: true, color: NAVY });
-    txt(s, a[2], { x: M + 0.88, y: y + 0.50, w: 7.2, h: 0.28, fontSize: 11, color: MUTED });
+    const y = 2.80 + i * 0.86;
+    rect(s, { x: MX, y, w: 0.72, h: 0.74, fill: { color: BLUE }, line: { color: BLUE } });
+    txt(s, a[0], { x: MX, y, w: 0.72, h: 0.74, fontSize: 13, bold: true, color: WHITE, align: "center", valign: "middle" });
+    wbox(s, { x: MX + 0.72, y, w: LW2 - 0.72, h: 0.74 });
+    txt(s, a[1], { x: MX + 0.94, y: y + 0.10, w: LW2 - 1.16, h: 0.30, fontSize: 12.5, bold: true, color: NAVY });
+    txt(s, a[2], { x: MX + 0.94, y: y + 0.40, w: LW2 - 1.16, h: 0.26, fontSize: 10, color: MUTED });
   });
-  const rx = M + 8.6, rw = CW - 8.6;
-  card(s, { x: rx, y: 1.42, w: rw, h: 2.06, fill: NAVY, line: NAVY });
-  txt(s, "특이 사항", { x: rx + 0.3, y: 1.68, w: rw - 0.6, h: 0.3, fontSize: 14, bold: true, color: GOLD });
-  txt(s, "제품개발팀 강충현 연구원의 아이디어는\n대표님 구두 컨펌이 완료된 건으로,\n제1회 위원회에서 정식 심의 절차를 거쳐\n승계·출원 및 보상 등급을 의결합니다.", { x: rx + 0.3, y: 2.08, w: rw - 0.6, h: 1.24, fontSize: 11.5, color: WHITE, lineSpacing: 19 });
-  card(s, { x: rx, y: 3.68, w: rw, h: 2.02 });
-  txt(s, "진행 방식", { x: rx + 0.3, y: 3.92, w: rw - 0.6, h: 0.3, fontSize: 14, bold: true, color: NAVY });
-  txt(s, [
-    { text: "아이디어 발표 15분", options: { fontSize: 11.5, color: TEXT, bullet: true, breakLine: true } },
-    { text: "질의응답 10분", options: { fontSize: 11.5, color: TEXT, bullet: true, breakLine: true } },
-    { text: "위원별 평가표 채점 후 등급 결정", options: { fontSize: 11.5, color: TEXT, bullet: true, breakLine: true } },
-    { text: "가결 시 (주)차원에 출원 의뢰", options: { fontSize: 11.5, color: TEXT, bullet: true } },
-  ], { x: rx + 0.3, y: 4.32, w: rw - 0.6, h: 1.24, paraSpaceAfter: 6 });
+  const RX2 = MX + LW2 + 0.33, RW2 = CW - LW2 - 0.33;
+  hbar(s, { x: RX2, y: 2.80, w: RW2, t: "특 이 사 항" });
+  wbox(s, { x: RX2, y: 3.22, w: RW2, h: 1.14, fill: SOFT, line: PILLLN });
+  txt(s, "제품개발팀 강충현 연구원의 아이디어는\n대표님 구두 컨펌이 완료된 건입니다.\n제1회 위원회에서 정식 심의 절차를 거쳐\n승계·출원 및 보상 등급을 의결합니다.", { x: RX2 + 0.20, y: 3.22, w: RW2 - 0.40, h: 1.14, fontSize: 10.5, color: "44506A", valign: "middle", lineSpacing: 16 });
+  hbar(s, { x: RX2, y: 4.52, w: RW2, t: "진 행 방 식" });
+  wbox(s, { x: RX2, y: 4.94, w: RW2, h: 1.32 });
+  txt(s, "아이디어 발표 15분\n질의응답 10분\n위원별 평가표 채점 후 등급 결정\n가결 시 (주)차원에 출원 의뢰", { x: RX2 + 0.24, y: 4.94, w: RW2 - 0.48, h: 1.32, fontSize: 10.5, color: TXT, valign: "middle", lineSpacing: 19 });
+  txt(s, "※ 부결 의결 시 신고일부터 4개월 이내에 미승계 사실을 서면으로 통지해야 합니다. (「발명진흥법」 제13조, 시행령 제7조)", { x: MX, y: 6.42, w: CW, h: 0.28, fontSize: 9.5, color: MUTED });
 }
 
-/* ─── 11 관리 포인트 ──────────────────────────────────── */
+/* ── 12. 관리 포인트 ─────────────────────────────────── */
 {
-  const s = base("운영상 관리 포인트", "KEY CONTROLS");
+  const s = page("운영 관리", "주요 관리 포인트",
+    "위원회 운영 과정에서 기한을 놓치면 권리 자체를 잃거나 보상 절차에 하자가 생길 수 있습니다.\n아래 항목은 연구기획팀이 발명 신고 접수 시점부터 관리하며, 위원회 개최 시 마감 임박 건을 안건으로 보고합니다.", 11);
   const pts = [
-    ["4개월", "승계 통지 기한", "신고 접수일부터 4개월 이내 승계 여부를 서면 통지해야 하며, 미통지 시 권리 승계를 포기한 것으로 봅니다. (제13조·시행령 제7조)"],
-    ["12개월", "조약우선권 기한", "국내 출원일부터 12개월 이내에 해외 출원 여부를 결정해야 우선권 주장이 가능합니다."],
-    ["700만원", "보상금 비과세 한도", "연간 700만원까지 비과세되므로, 동일 발명자의 연간 누적 지급액을 지급 전 확인합니다. (「소득세법」)"],
-    ["제19조", "출원 전 비밀유지", "논문·학회·전시 등 사전 공개 시 신규성 상실로 거절될 수 있으며, 위반 시 제58조에 따른 처벌 대상입니다."],
-    ["제15조", "규정 제정 절차", "보상규정은 임직원과 협의하여 작성하며, 불리하게 변경할 경우 과반수 동의가 필요합니다."],
-    ["별도 기구", "이의 제기 대응", "보상에 이의가 있는 경우 「발명진흥법」 제17조의 직무발명심의위원회를 별도로 구성하여 심의합니다."],
+    ["승계 통지 기한 (4개월)", "신고 접수일부터 4개월 이내에 승계 여부를 서면 통지해야 하며, 미통지 시 승계를 포기한 것으로 봅니다.\n근거 : 제13조 · 시행령 제7조"],
+    ["조약우선권 기한 (12개월)", "국내 출원일부터 12개월 이내에 해외 출원 여부를 결정해야 우선권 주장이 가능합니다.\n근거 : 파리협약 우선권"],
+    ["보상금 비과세 한도 (700만원)", "연간 700만원까지 비과세되므로 동일 발명자의 연간 누적 지급액을 지급 전 확인합니다.\n근거 : 「소득세법」 제12조제3호 어목"],
+    ["출원 전 비밀유지", "논문·학회·전시 등 사전 공개 시 신규성 상실로 등록이 거절될 수 있으며, 위반 시 처벌 대상입니다.\n근거 : 제19조 · 제58조"],
+    ["규정 제정 시 협의 절차", "보상 규정은 임직원과 협의하여 작성하며, 불리하게 변경할 경우 과반수 동의가 필요합니다.\n근거 : 제15조제3항"],
+    ["보상 이의 제기 대응", "보상에 이의가 있는 경우 사용자위원·종업원위원 동수의 직무발명심의위원회를 별도로 구성합니다.\n근거 : 제17조 · 제18조"],
   ];
+  const pw = (CW - 2 * 0.25) / 3;
   pts.forEach((p, i) => {
-    const x = M + (i % 3) * 4.131, y = 1.44 + Math.floor(i / 3) * 2.28;
-    card(s, { x, y, w: 3.83, h: 2.04 });
-    s.addShape(pres.ShapeType.roundRect, { x: x + 0.28, y: y + 0.26, w: 1.5, h: 0.42, rectRadius: 0.08, fill: { color: NAVY }, line: { color: NAVY } });
-    txt(s, p[0], { x: x + 0.28, y: y + 0.26, w: 1.5, h: 0.42, fontSize: 12, bold: true, color: GOLD, align: "center", valign: "middle" });
-    txt(s, p[1], { x: x + 0.28, y: y + 0.82, w: 3.27, h: 0.3, fontSize: 13.5, bold: true, color: NAVY });
-    txt(s, p[2], { x: x + 0.28, y: y + 1.18, w: 3.27, h: 0.72, fontSize: 10.5, color: TEXT, lineSpacing: 15 });
+    const x = MX + (i % 3) * (pw + 0.25), y = 2.16 + Math.floor(i / 3) * 2.10;
+    hbar(s, { x, y, w: pw, h: 0.44, t: p[0], fs: 11.5 });
+    wbox(s, { x, y: y + 0.44, w: pw, h: 1.28 });
+    txt(s, p[1], { x: x + 0.20, y: y + 0.44, w: pw - 0.40, h: 1.28, fontSize: 10.5, color: TXT, valign: "middle", lineSpacing: 16 });
   });
-  txt(s, "※ 위 기한은 모두 연구기획팀이 발명 신고 접수 시점부터 관리하며, 위원회 개최 시 마감 임박 건을 안건으로 보고합니다.", { x: M, y: 6.10, w: CW, h: 0.3, fontSize: 9.5, color: MUTED });
+  txt(s, "※ 마감 임박 건은 위원회 개최 시 별도 안건으로 보고하며, 기한 경과가 우려되는 건은 서면 심의로 대체할 수 있도록 운영 규칙에 반영하겠습니다.", { x: MX, y: 6.44, w: CW, h: 0.28, fontSize: 9.5, color: MUTED });
 }
 
-/* ─── 12 승인 요청 및 후속 조치 ─────────────────────────── */
+/* ── 13. 승인 요청 (표지 서식) ───────────────────────── */
 {
-  const s = pres.addSlide(); pageNo += 1;
-  s.background = { color: NAVY };
-  s.addShape(pres.ShapeType.ellipse, { x: 10.6, y: -1.8, w: 5.0, h: 5.0, fill: { color: NAVY2 }, line: { color: NAVY2 } });
-  txt(s, "REQUEST FOR APPROVAL", { x: M, y: 0.62, w: 8, h: 0.26, fontSize: 10.5, bold: true, color: GOLD, charSpacing: 1.6 });
-  txt(s, "승인 요청 및 후속 조치", { x: M, y: 0.90, w: 10, h: 0.54, fontSize: 30, bold: true, color: WHITE });
+  const s = pres.addSlide();
+  s.addImage({ path: A("bg_cover.jpg"), x: 0, y: 0, w: SW, h: SH });
+  txt(s, "승인 요청 사항", { x: MX, y: 1.42, w: 7, h: 0.6, fontSize: 30, bold: true, color: WHITE });
   const asks = [
-    ["01", "특허심의위원회 설치·운영(안) 승인", "위원 6인 구성 · 수시 개최 · 과반수 의결"],
-    ["02", "직무발명 보상규정(안) 및 서식 4종 승인", "등급별 보상금 기준 · 신고서 · 평가표 · 양도계약서"],
-    ["03", "제1회 특허심의위원회 개최 승인", "안건 4건 (운영 방안 · 기한 관리 · 보상 기준 · 아이디어 심의)"],
+    ["01", "특허심의위원회 설치·운영(안) 승인", "위원 6인 구성 · 안건 발생 시 수시 개최 · 출석위원 과반수 찬성으로 의결"],
+    ["02", "직무발명 보상규정(안) 및 서식 4종 승인", "등급별 보상금 기준 · 발명신고서 · 등급 평가표 · 특허권 양도계약서"],
+    ["03", "제1회 특허심의위원회 개최 승인", "안건 4건 — 운영 방안 · 기한 관리 · 보상 기준 · 아이디어 심의"],
   ];
   asks.forEach((a, i) => {
-    const y = 1.72 + i * 1.14;
-    s.addShape(pres.ShapeType.roundRect, { x: M, y, w: CW, h: 1.0, rectRadius: 0.06, fill: { color: NAVY2 }, line: { color: "2E5177", width: 1 } });
-    s.addShape(pres.ShapeType.roundRect, { x: M + 0.3, y: y + 0.26, w: 0.5, h: 0.5, rectRadius: 0.1, fill: { color: GOLD }, line: { color: GOLD } });
-    txt(s, a[0], { x: M + 0.3, y: y + 0.26, w: 0.5, h: 0.5, fontSize: 13, bold: true, color: NAVY, align: "center", valign: "middle" });
-    txt(s, a[1], { x: M + 0.98, y: y + 0.22, w: 10.6, h: 0.32, fontSize: 15, bold: true, color: WHITE });
-    txt(s, a[2], { x: M + 0.98, y: y + 0.58, w: 10.6, h: 0.28, fontSize: 11, color: "AEC0DC" });
+    const y = 2.42 + i * 0.86;
+    txt(s, a[0], { x: MX, y: y + 0.02, w: 0.5, h: 0.32, fontSize: 15, bold: true, color: "8FA8D8" });
+    txt(s, a[1], { x: MX + 0.56, y: y, w: 7.6, h: 0.34, fontSize: 15, bold: true, color: WHITE });
+    txt(s, a[2], { x: MX + 0.56, y: y + 0.36, w: 7.6, h: 0.3, fontSize: 10.5, color: "A9B7D4" });
   });
-  txt(s, "후속 조치", { x: M, y: 5.32, w: 4, h: 0.28, fontSize: 12, bold: true, color: GOLD });
-  const nx = ["규정(안) 임직원 협의", "제1회 위원회 개최", "규정 제정 · 시행", "발명 신고 상시 접수"];
-  nx.forEach((n, i) => {
-    const x = M + i * 3.084;
-    s.addShape(pres.ShapeType.roundRect, { x, y: 5.68, w: 2.84, h: 0.62, rectRadius: 0.08, fill: { color: NAVY2 }, line: { color: "2E5177", width: 1 } });
-    txt(s, `${i + 1}. ${n}`, { x: x + 0.14, y: 5.68, w: 2.56, h: 0.62, fontSize: 11.5, bold: true, color: WHITE, align: "center", valign: "middle" });
-    if (i < 3) txt(s, "▶", { x: x + 2.84, y: 5.68, w: 0.22, h: 0.62, fontSize: 10, color: GOLD, align: "center", valign: "middle" });
-  });
-  txt(s, "㈜엔키화이트햇  |  연구기획팀  |  2026. 9. 4.", { x: M, y: SH - 0.56, w: 8, h: 0.24, fontSize: 9, color: "8FA4C4" });
+  txt(s, "후속 조치", { x: MX, y: 5.28, w: 3, h: 0.28, fontSize: 11, bold: true, color: "8FA8D8" });
+  txt(s, "① 보상규정(안) 임직원 협의    ②  제1회 위원회 개최    ③  규정 제정 및 시행    ④  발명 신고 상시 접수", { x: MX, y: 5.62, w: 8.6, h: 0.3, fontSize: 12, color: "E3E8F4" });
+  txt(s, "㈜엔키화이트햇  연구기획팀  ·  2026. 9. 4.", { x: MX, y: 6.48, w: 6, h: 0.28, fontSize: 10.5, color: "9BA9C8" });
   s.addNotes("승인해 주시면 보상규정(안)의 임직원 협의 절차를 진행하고, 제1회 특허심의위원회 일정을 확정하여 안내드리겠습니다.");
 }
 
