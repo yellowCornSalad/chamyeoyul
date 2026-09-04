@@ -1875,15 +1875,21 @@ function budImpApply(){
     if(md > 0) BUD.indirect = r3(indirect / md * 100);   /* r1로 저장하면 총액 역산이 어긋난다 */
   }
   if(c.sp.gov > 0) BUD.govPct = r3(Math.min(100, c.sp.gov / total * 100));
+  const burden = total - total * (BUD.govPct/100);
+  let noSplit = false;
   if(c.sp.cash > 0) BUD.cash = Math.round(c.sp.cash);
-  else if(c.sp.inkind > 0){
-    const b = total - total * (BUD.govPct/100);
-    BUD.cash = Math.max(0, Math.round(b - c.sp.inkind));
+  else if(c.sp.inkind > 0) BUD.cash = Math.max(0, Math.round(burden - c.sp.inkind));
+  else {
+    /* 표에 현금·현물 구분이 없으면 현물을 0으로 둔다. 기본 현물이 끼어들면
+       수정직접비가 달라져 표에 적힌 직접비·간접비가 그대로 재현되지 않는다. */
+    BUD.cash = Math.round(burden); noSplit = burden > 0;
   }
   BUD_IMP = null;
   budSave(); budRender();
   document.getElementById("budImp").style.display = "none";
-  toast("불러온 예산을 적용했어요. 한도 검증 결과를 확인하세요.");
+  toast(noSplit
+    ? "적용했어요. 현금·현물 구분이 표에 없어 전액 현금으로 뒀으니, 현물이 있으면 「기관부담 현금」을 고치세요."
+    : "불러온 예산을 적용했어요. 한도 검증 결과를 확인하세요.");
 }
 function budImpMsg(t, bad){
   const e = document.getElementById("budImpMsg");
