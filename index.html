@@ -1095,7 +1095,12 @@ async function unlock(password){
   ME=who; DEK=who.dek; LEGACY_PW=who.legacy;
   const data=await loadData(password);
   sessionPassword=password; PROJECTS=data.projects; loadedVersionId=data.versionId; buildIndex();
-  try{ EMPLOYEES = await decryptBlob(EMP_ENC, password); }catch(e){ EMPLOYEES={}; }
+  /* 로스터는 legacy 비번으로 암호화된 v1 블롭이라 세션 비번으로는 못 푼다(관리자 로그인 시 빈 값 되던 버그) */
+  EMPLOYEES={};
+  for(const pw of [LEGACY_PW, password]){
+    if(!pw) continue;
+    try{ const e=await decryptBlob(EMP_ENC, pw); if(e && Object.keys(e).length){ EMPLOYEES=e; break; } }catch(err){}
+  }
   document.getElementById("gate").style.display="none";
   document.getElementById("app").style.display="";
   document.getElementById("syncsub").textContent = ME.role==="admin"
