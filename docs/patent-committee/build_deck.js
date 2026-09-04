@@ -71,12 +71,12 @@ const TB = { type: "solid", color: LINE, pt: 1 };
 {
   const s = pres.addSlide();
   s.addImage({ path: A("bg_cover.jpg"), x: 0, y: 0, w: SW, h: SH });
-  txt(s, "특허심의위원회 설치·운영(안)", { x: MX, y: 2.02, w: 8.6, h: 0.72, fontSize: 34, bold: true, color: WHITE });
-  txt(s, "「발명진흥법」에 따른 직무발명 관리체계 정비", { x: MX + 0.02, y: 2.86, w: 8.6, h: 0.36, fontSize: 15, color: "AEBBD8" });
+  txt(s, "특허심의위원회 설치·운영(안)", { x: MX, y: 1.30, w: 10.8, h: 0.98, fontSize: 50, bold: true, color: WHITE });
+  txt(s, "「발명진흥법」에 따른 직무발명 관리체계 정비", { x: MX + 0.02, y: 2.42, w: 8.6, h: 0.38, fontSize: 16, color: "AEBBD8" });
   txt(s, [
-    { text: "2026. 9.", options: { fontSize: 12, color: "D6DDEC", breakLine: true } },
-    { text: "연구기획팀 배준호 연구원", options: { fontSize: 12, color: "D6DDEC" } },
-  ], { x: MX + 0.02, y: 5.92, w: 5, h: 0.62, lineSpacing: 20 });
+    { text: "2026. 9.", options: { fontSize: 12.5, color: "D6DDEC", breakLine: true } },
+    { text: "연구기획팀 배준호 연구원", options: { fontSize: 12.5, color: "D6DDEC" } },
+  ], { x: MX + 0.02, y: 6.18, w: 5, h: 0.64, lineSpacing: 21 });
 }
 
 /* ── 2. CONTENTS ─────────────────────────────────────── */
