@@ -255,6 +255,75 @@
     .synccard{padding:7px 10px}.synccard .r2{display:none}
     .main{padding:18px 16px 50px}
   }
+  /* ===== 예산 계산기 ===== */
+  .budpanel{padding:6px 6px 14px}
+  .budsec{padding:0 16px}
+  .budnote{margin:0 16px 12px;padding:10px 12px;border-radius:10px;background:var(--accent-soft);
+    color:var(--accent-d);font-size:12px;font-weight:600;line-height:1.55}
+  .budnote b{font-weight:800}
+  .budgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;padding:4px 16px 14px}
+  .budgrid label{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:700;color:var(--sub)}
+  .budgrid input,.budgrid select{padding:9px 10px;font-size:13px;font-weight:700;color:var(--ink);
+    border:1.5px solid var(--line);border-radius:9px;background:#fff;font-family:inherit;width:100%}
+  .budgrid input:focus,.budgrid select:focus{outline:none;border-color:var(--accent)}
+  .budgrid label.chk{flex-direction:row;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);align-self:end;padding-bottom:9px}
+  .budgrid label.chk input{width:auto}
+  .budcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:0 16px 14px}
+  .budcard{border:1px solid var(--line);border-radius:13px;padding:12px 13px;background:#fff}
+  .budcard.hi{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-d) 100%);border-color:transparent}
+  .budcard .k{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.02em}
+  .budcard.hi .k{color:rgba(255,255,255,.78)}
+  .budcard .v{font-size:19px;font-weight:800;color:var(--ink);margin-top:5px;letter-spacing:-.02em}
+  .budcard.hi .v{color:#fff}
+  .budcard .s{font-size:11px;font-weight:600;color:var(--muted);margin-top:3px}
+  .budcard.hi .s{color:rgba(255,255,255,.8)}
+  .budwarn{padding:0 16px}
+  .budw{display:flex;gap:9px;align-items:flex-start;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12.5px;line-height:1.55}
+  .budw.err{background:var(--red-soft);color:#991b1b}
+  .budw.warn{background:var(--amber-soft);color:#92400e}
+  .budw.ok{background:var(--green-soft);color:#166534}
+  .budw .wt{font-weight:800}
+  .budw .wl{display:block;margin-top:3px;font-size:11px;font-weight:600;opacity:.8}
+  .budtbl{width:100%;border-collapse:collapse;font-size:13px}
+  .budtbl th{font-size:11px;font-weight:700;color:var(--sub);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  .budtbl th.n,.budtbl td.n{text-align:right}
+  .budtbl td{padding:5px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  .budtbl tr.grp{background:#fbfbfd}
+  .budtbl tr.grp>td{font-weight:800}
+  .budtbl tr.kid td:first-child{padding-left:30px}
+  .budtbl tr.tot{background:var(--accent-soft)}
+  .budtbl tr.tot td{font-weight:800;color:var(--accent-d);border-bottom:none}
+  .budname{border:1px solid transparent;background:transparent;font:inherit;font-weight:inherit;color:inherit;
+    padding:5px 7px;border-radius:7px;width:100%;max-width:260px}
+  .budname:hover{border-color:var(--line)}
+  .budname:focus{outline:none;border-color:var(--accent);background:#fff}
+  .budpct,.budamt{border:1.5px solid var(--line);border-radius:7px;padding:5px 7px;font:inherit;font-weight:700;
+    text-align:right;background:#fff;color:var(--ink)}
+  .budpct{width:66px} .budamt{width:126px}
+  .budpct:focus,.budamt:focus{outline:none;border-color:var(--accent)}
+  .budpct.over,.budamt.over{border-color:var(--red);color:var(--red)}
+  .budacts{display:flex;gap:5px;justify-content:flex-end;align-items:center}
+  .budic{border:1px solid var(--line);background:#fff;color:var(--sub);border-radius:7px;width:26px;height:26px;
+    display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:800;padding:0}
+  .budic:hover{border-color:var(--accent);color:var(--accent)}
+  .budic.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .budic.del:hover{border-color:var(--red);color:var(--red);background:var(--red-soft)}
+  .budaddrow td{padding:9px 10px}
+  .budadd{border:1px dashed var(--line);background:#fff;color:var(--sub);border-radius:8px;padding:6px 11px;
+    font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .budadd:hover{border-color:var(--accent);color:var(--accent);border-style:solid}
+  .budlaw{margin:14px 16px 0;padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:#fbfbfd}
+  .budlaw h4{margin:0 0 8px;font-size:12px;font-weight:800;color:var(--ink2)}
+  .budlaw ul{margin:0;padding-left:16px}
+  .budlaw li{font-size:11.5px;color:var(--sub);line-height:1.75;font-weight:600}
+  .budlaw li b{color:var(--ink2);font-weight:800}
+  .budlaw .tag{display:inline-block;font-size:9.5px;font-weight:800;border-radius:5px;padding:1px 5px;margin-right:5px;vertical-align:1px}
+  .budlaw .tag.law{background:var(--green-soft);color:#166534}
+  .budlaw .tag.prac{background:var(--amber-soft);color:#92400e}
+  .budlink{margin:12px 16px 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
+    display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);font-weight:600}
+  .budlink b{color:var(--accent-d);font-weight:800}
+  @media (max-width:640px){ .budamt{width:104px} .budtbl{font-size:12px} }
 </style>
 </head>
 <body>
@@ -276,6 +345,7 @@
       <nav class="nav">
         <button class="navitem active" id="navHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>전체 현황</button>
         <button class="navitem" id="navCand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>투입 후보</button>
+        <button class="navitem" id="navBudget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M8 6h8"/><path d="M8 11h.01"/><path d="M12 11h.01"/><path d="M16 11h.01"/><path d="M8 15h.01"/><path d="M12 15h.01"/><path d="M16 15v4"/><path d="M8 19h4"/></svg>예산 계산기</button>
         <button class="navitem" id="navXlsx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M4 21h16"/></svg>엑셀 추출</button>
       </nav>
       <div class="sidefoot">
@@ -289,7 +359,7 @@
     <main class="main">
       <div class="pagehead">
         <h1 id="homeTitle" title="처음 화면으로">참여율 관리</h1>
-        <p class="sub">인원별 국가과제 참여율과 잔여 여력(추가 가능 %)을 확인합니다. 최대 100%.</p>
+        <p class="sub" id="pageSub">인원별 국가과제 참여율과 잔여 여력(추가 가능 %)을 확인합니다. 최대 100%.</p>
       </div>
       <div class="cardscroll" id="projCards"></div>
       <div class="hint" id="hintline">카드를 누르면 해당 과제 인원만 볼 수 있어요.</div>
@@ -309,7 +379,7 @@
         </div>
         <div id="histBody"></div>
       </section>
-      <section class="panel">
+      <section class="panel" id="listPanel">
         <div class="panelhead">
           <div><h2>인원 목록</h2><div class="panelsub" id="listsub"></div></div>
           <div class="headctl">
@@ -320,6 +390,34 @@
         </div>
         <div class="pills" id="pills"></div>
         <div id="out"></div>
+      </section>
+      <section class="panel budpanel" id="budgetView" style="display:none">
+        <div class="panelhead">
+          <div><h2>연구개발비 편성 계산기</h2>
+            <div class="panelsub">총 연구개발비를 넣으면 비목별로 자동 배분하고, 국가연구개발혁신법 기준으로 한도를 검증합니다.</div></div>
+          <div class="headctl">
+            <button class="budadd" id="budResetBtn">기본값으로</button>
+            <button class="budadd" id="budXlsxBtn">엑셀 추출</button>
+          </div>
+        </div>
+        <div class="budnote" id="budNote"></div>
+        <div class="budgrid">
+          <label>과제<select id="budProj"></select></label>
+          <label>발주기관<select id="budAgency"></select></label>
+          <label>기관 유형<select id="budOrg"></select></label>
+          <label>총 연구개발비 (원)<input id="budTotal" type="text" inputmode="numeric" autocomplete="off"></label>
+          <label>정부지원 비율 (%)<input id="budGov" type="number" step="0.1" min="0" max="100"></label>
+          <label>기관부담 현금 (원)<input id="budCash" type="text" inputmode="numeric" autocomplete="off"></label>
+          <label>간접비율 (%)<input id="budIndirect" type="number" step="0.01" min="0"></label>
+          <label>연구기간 (개월)<input id="budMonths" type="number" step="1" min="1" max="60"></label>
+          <label>인당 평균 인건비 (연, 원)<input id="budAvgPay" type="text" inputmode="numeric" autocomplete="off"></label>
+          <label class="chk"><input type="checkbox" id="budSecure"> 보안과제</label>
+        </div>
+        <div class="budcards" id="budCards"></div>
+        <div class="budwarn" id="budWarn"></div>
+        <div class="budsec"><table class="budtbl" id="budTbl"></table></div>
+        <div class="budlink" id="budLink"></div>
+        <div class="budlaw" id="budLaw"></div>
       </section>
     </main>
   </div>
@@ -665,6 +763,21 @@ function renderCandList(){
 function render(){
   if(!PROJECTS) return;
   toggleClear();
+  const bud = view==="budget";
+  const bv = document.getElementById("budgetView"); if(bv) bv.style.display = bud?"":"none";
+  const hp = document.getElementById("histPanel"), lp = document.getElementById("listPanel");
+  document.getElementById("navBudget").classList.toggle("active", bud);
+  const psb=document.getElementById("pageSub"); if(psb) psb.textContent = bud ? "국가연구개발혁신법 기준으로 과제 예산을 비목별로 편성하고 한도를 검증합니다." : "인원별 국가과제 참여율과 잔여 여력(추가 가능 %)을 확인합니다. 최대 100%.";
+  if(bud){
+    if(budHistPrev===null && hp) budHistPrev = hp.style.display;
+    ["projCards","hintline","newProjBox"].forEach(function(id){ const e=document.getElementById(id); if(e) e.style.display="none"; });
+    if(hp) hp.style.display="none"; if(lp) lp.style.display="none";
+    document.getElementById("navHome").classList.remove("active");
+    document.getElementById("navCand").classList.remove("active");
+    budRender(); return;
+  }
+  if(lp) lp.style.display="";
+  if(hp && budHistPrev!==null){ hp.style.display = budHistPrev; budHistPrev = null; }
   const cand = view==="candidates";
   document.getElementById("projCards").style.display = cand?"none":"";
   const hl=document.getElementById("hintline");
@@ -989,7 +1102,7 @@ async function unlock(password){
     ? `${ME.name} · 담당 ${myProjects().length}개 과제`
     : `열람 전용 · ${PROJECTS.length}개 과제 · ${NAMES.length}명`;
   document.querySelector(".brand .sub").textContent = ME.role==="admin" ? ME.name : "VIEW ONLY";
-  render(); syncView(); startPolling(); loadHistory(); q.focus();
+  budInit(); render(); syncView(); startPolling(); loadHistory(); q.focus();
 }
 function submitPw(){ const err=document.getElementById("pwerr"); err.textContent="확인 중...";
   unlock(document.getElementById("pw").value).then(()=>{err.textContent="";}).catch(()=>{err.textContent="비밀번호가 올바르지 않습니다.";}); }
@@ -1013,6 +1126,437 @@ document.getElementById("sortSel").addEventListener("change", e=>{
   if(view==="candidates") candSortKey=e.target.value; else sortKey=e.target.value;
   selected=null; syncView(); render(); });
 document.getElementById("pw").focus();
+
+/* ===== 예산 계산기 =====
+   근거: 국가연구개발혁신법 시행령 [별표1] 부담기준 / [별표2] 연구개발비 사용용도
+        과기정통부 고시 「국가연구개발사업 연구개발비 사용 기준」 계상 한도
+   비중(mix)은 법정 수치가 아니라 편성 관행 기반 초기값이며 사용자가 조정한다. */
+const BUD_KEY = "chamyeoyul_budget_v1";
+let budHistPrev = null;
+const BUD_LOCK = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2.2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
+const BUD_UNLOCK = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2.2"/><path d="M8 10V7a4 4 0 0 1 7.5-1.9"/></svg>';
+function budEsc(v){ return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+const BUD_ORG = {
+  sme:   {label:"중소기업",             gov:75,  cash:10, profit:true},
+  mid:   {label:"중견기업",             gov:70,  cash:13, profit:true},
+  large: {label:"대기업·공기업",         gov:50,  cash:15, profit:true},
+  np:    {label:"비영리 (대학·출연연)",  gov:100, cash:0,  profit:false}
+};
+const BUD_AGENCY = {
+  iitp: {label:"IITP · 정보통신기획평가원", secure:false, indirect:10,
+    desc:"과기정통부 ICT R&D. 혁신법 + 「정보통신·방송 연구개발 관리규정」이 함께 적용됩니다.",
+    mix:{labor:60, student:0, equip:4, material:7, activity:17, entrust:5, allowance:7, innov:0, security:0}},
+  nsr:  {label:"국가보안기술연구소 (국보연)", secure:true, indirect:10,
+    desc:"보안과제로 분류되는 경우가 많아 보안수당 계상이 가능합니다. 보안과제는 별도 보안관리 요건이 붙습니다.",
+    mix:{labor:60, student:0, equip:5, material:6, activity:16, entrust:3, allowance:7, innov:0, security:3}},
+  etri: {label:"ETRI · 한국전자통신연구원", secure:false, indirect:10,
+    desc:"출연연 주관에 기업이 참여·위탁으로 붙는 구조가 흔해 위탁연구개발비 비중이 큽니다.",
+    mix:{labor:50, student:0, equip:5, material:7, activity:15, entrust:17, allowance:6, innov:0, security:0}},
+  keit: {label:"KEIT · 한국산업기술기획평가원", secure:false, indirect:10,
+    desc:"산업부 소관. 「산업기술혁신사업 공통 운영요령」이 병행 적용됩니다.",
+    mix:{labor:50, student:0, equip:9, material:12, activity:16, entrust:6, allowance:7, innov:0, security:0}},
+  etc:  {label:"기타 · 혁신법 일반", secure:false, indirect:10,
+    desc:"부처 특례 없이 국가연구개발혁신법 기준만 적용한 기본 편성입니다.",
+    mix:{labor:56, student:0, equip:5, material:8, activity:18, entrust:6, allowance:7, innov:0, security:0}}
+};
+/* rule: labor=수정인건비 산입 / allowance=연구수당 / security=보안수당 / entrust=위탁
+        intl=국제공동 / burden=연구개발부담비 / innov=연구혁신비 / rigid=경직성 / ""=일반 */
+function budSeed(mix){
+  return [
+    {id:"labor",    name:"인건비",              rule:"labor",     pct:mix.labor,     lock:false,
+      kids:[{id:"k1",name:"내부 인건비",pct:85},{id:"k2",name:"외부 인건비",pct:15}]},
+    {id:"student",  name:"학생인건비",           rule:"labor",     pct:mix.student,   lock:false, kids:[]},
+    {id:"equip",    name:"연구시설·장비비",      rule:"rigid",     pct:mix.equip,     lock:false,
+      kids:[{id:"k3",name:"구입·설치비",pct:55},{id:"k4",name:"임차비",pct:25},{id:"k5",name:"운영·유지비",pct:20}]},
+    {id:"material", name:"연구재료비",           rule:"",          pct:mix.material,  lock:false,
+      kids:[{id:"k6",name:"연구재료 구입비",pct:55},{id:"k7",name:"연구개발과제 관리비",pct:15},{id:"k8",name:"연구재료 제작비",pct:30}]},
+    {id:"activity", name:"연구활동비",           rule:"",          pct:mix.activity,  lock:false,
+      kids:[{id:"k9",name:"지식재산창출활동비",pct:10},{id:"k10",name:"외부전문기술활용비",pct:20},
+            {id:"k11",name:"회의비",pct:12},{id:"k12",name:"출장비",pct:22},
+            {id:"k13",name:"소프트웨어 활용비",pct:12},{id:"k14",name:"연구실 운영비",pct:10},
+            {id:"k15",name:"연구인력 지원비",pct:8},{id:"k16",name:"클라우드컴퓨팅 서비스 이용료",pct:3},
+            {id:"k17",name:"그 밖의 비용",pct:3}]},
+    {id:"innov",    name:"연구혁신비 (자율비목)", rule:"innov",     pct:mix.innov,     lock:false, kids:[]},
+    {id:"entrust",  name:"위탁연구개발비",       rule:"entrust",   pct:mix.entrust,   lock:false, kids:[]},
+    {id:"allowance",name:"연구수당",             rule:"allowance", pct:mix.allowance, lock:false, kids:[]},
+    {id:"security", name:"보안수당",             rule:"security",  pct:mix.security,  lock:false, kids:[]}
+  ];
+}
+let BUD = null;
+function budNum(v){ const n = parseFloat(String(v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; }
+function budWon(v){ return Math.round(v||0).toLocaleString("ko-KR"); }
+function budShort(v){
+  v = Math.round(v||0);
+  if(Math.abs(v) >= 100000000) return (v/100000000).toFixed(2).replace(/\.?0+$/,"") + "억";
+  if(Math.abs(v) >= 10000)     return Math.round(v/10000).toLocaleString("ko-KR") + "만";
+  return v.toLocaleString("ko-KR");
+}
+function budDefault(proj, agency){
+  agency = BUD_AGENCY[agency] ? agency : "iitp";
+  const a = BUD_AGENCY[agency];
+  return { proj: proj||"", agency:agency, org:"sme", total:1000000000, govPct:BUD_ORG.sme.gov, cash:null,
+           indirect:a.indirect, months:12, secure:a.secure, avgPay:0, items:budSeed(a.mix) };
+}
+function budLoad(){
+  try{ const raw = localStorage.getItem(BUD_KEY);
+    if(raw){ const o = JSON.parse(raw); if(o && Array.isArray(o.items) && o.items.length) return o; } }catch(e){}
+  return budDefault("", "iitp");
+}
+function budSave(){ try{ localStorage.setItem(BUD_KEY, JSON.stringify(BUD)); }catch(e){} }
+
+/* 비중 합 100 유지 - 잠근 항목은 고정하고 나머지를 비례 재배분 */
+function budNorm(items, keepId){
+  const locked = items.filter(x => x.lock && x.id !== keepId);
+  const keep   = keepId ? items.filter(x => x.id === keepId) : [];
+  const free   = items.filter(x => !x.lock && x.id !== keepId);
+  const fixed  = locked.concat(keep).reduce((a,x) => a + budNum(x.pct), 0);
+  let pool = 100 - fixed;
+  if(pool < 0){
+    if(keep[0]) keep[0].pct = r1(Math.max(0, 100 - locked.reduce((a,x)=>a+budNum(x.pct),0)));
+    pool = 0;
+  }
+  const cur = free.reduce((a,x) => a + budNum(x.pct), 0);
+  if(free.length){
+    if(cur > 0) free.forEach(x => { x.pct = r1(pool * budNum(x.pct) / cur); });
+    else        free.forEach(x => { x.pct = r1(pool / free.length); });
+  }
+  const drift = 100 - items.reduce((a,x) => a + budNum(x.pct), 0);
+  if(Math.abs(drift) > 0.001){
+    const t = free.slice().sort((a,b) => budNum(b.pct) - budNum(a.pct))[0]
+           || items.slice().sort((a,b) => budNum(b.pct) - budNum(a.pct))[0];
+    if(t) t.pct = r1(Math.max(0, budNum(t.pct) + drift));
+  }
+}
+function budNormKids(kids){
+  if(!kids || !kids.length) return;
+  const sum = kids.reduce((a,k) => a + budNum(k.pct), 0);
+  if(sum <= 0){ kids.forEach(k => { k.pct = r1(100/kids.length); }); return; }
+  kids.forEach(k => { k.pct = r1(100 * budNum(k.pct) / sum); });
+  const drift = 100 - kids.reduce((a,k) => a + budNum(k.pct), 0);
+  if(Math.abs(drift) > 0.001){
+    const t = kids.slice().sort((a,b)=>budNum(b.pct)-budNum(a.pct))[0];
+    if(t) t.pct = r1(Math.max(0, budNum(t.pct) + drift));
+  }
+}
+
+function budCalc(){
+  const b = BUD, org = BUD_ORG[b.org] || BUD_ORG.sme;
+  const T = Math.max(0, budNum(b.total));
+  const r = Math.max(0, budNum(b.indirect)) / 100;
+  const govPct = Math.max(0, Math.min(100, budNum(b.govPct)));
+  const G = T * govPct / 100, B = T - G;
+  const cashMin = B * org.cash / 100;
+  const cash = Math.max(0, Math.min(B, (b.cash === null || b.cash === undefined) ? cashMin : budNum(b.cash)));
+  const inkind = Math.max(0, B - cash);
+
+  const items = b.items;
+  const sumPct = items.reduce((a,i) => a + budNum(i.pct), 0) || 100;
+  const exFrac = items.filter(i => ["entrust","intl","burden"].indexOf(i.rule) >= 0)
+                      .reduce((a,i) => a + budNum(i.pct), 0) / sumPct;
+  /* T = D + (D*(1-exFrac) - inkind)*r  =>  D = (T + inkind*r) / (1 + r*(1-exFrac)) */
+  let D = (1 + r*(1-exFrac)) > 0 ? (T + inkind*r) / (1 + r*(1-exFrac)) : T;
+  if(!isFinite(D) || D < 0) D = 0;
+  D = Math.min(D, T);
+
+  const rows = items.map(i => {
+    const amt = D * budNum(i.pct) / sumPct;
+    const ks = (i.kids||[]).reduce((a,k) => a + budNum(k.pct), 0);
+    const kids = (i.kids||[]).map(k => Object.assign({}, k, {amt: ks ? amt * budNum(k.pct) / ks : 0}));
+    return Object.assign({}, i, {amt:amt, kids:kids});
+  });
+  const by = function(rule){ return rows.filter(x => x.rule === rule).reduce((a,x) => a + x.amt, 0); };
+  const MD = Math.max(0, D*(1-exFrac) - inkind);
+  const I  = Math.max(0, T - D);
+
+  const laborMod = by("labor");
+  const RIGID = ["labor","allowance","security","entrust","intl","burden","rigid"];
+  const innovBase = D - rows.filter(x => RIGID.indexOf(x.rule) >= 0).reduce((a,x) => a + x.amt, 0);
+  const entrustBase = D - by("entrust") - by("intl") - by("burden");
+
+  return {T:T, G:G, B:B, cash:cash, cashMin:cashMin, inkind:inkind, D:D, I:I, MD:MD, rows:rows,
+          sumPct:sumPct, org:org, govPct:govPct, r:r, laborMod:laborMod, innovBase:innovBase,
+          entrustBase:entrustBase, allowance:by("allowance"), security:by("security"),
+          entrust:by("entrust"), innov:by("innov")};
+}
+
+function budWarnings(c){
+  const w = [], LAW = "국가연구개발혁신법 시행령 [별표1]", USE = "「국가연구개발사업 연구개발비 사용 기준」";
+  const eps = 1;
+  if(c.govPct > c.org.gov + 0.001)
+    w.push({k:"err", t:"정부지원 비율이 상한을 넘습니다",
+      d:c.org.label+"은 총 연구개발비의 "+c.org.gov+"%까지만 정부지원이 가능합니다 (현재 "+r1(c.govPct)+"%).", l:LAW});
+  if(c.org.cash > 0 && c.cash < c.cashMin - eps)
+    w.push({k:"err", t:"기관부담 현금이 부족합니다",
+      d:"기관부담금 "+budWon(c.B)+"원의 "+c.org.cash+"% 이상인 "+budWon(c.cashMin)+"원을 현금으로 부담해야 합니다 (현재 "+budWon(c.cash)+"원).", l:LAW});
+  const capA = c.laborMod * 0.2;
+  if(c.allowance > capA + eps)
+    w.push({k:"err", t:"연구수당이 한도를 넘습니다",
+      d:"수정인건비 "+budWon(c.laborMod)+"원의 20%인 "+budWon(capA)+"원까지 계상할 수 있습니다 (현재 "+budWon(c.allowance)+"원).",
+      l:USE+" · 연구수당 = 수정인건비(인건비+학생인건비+미지급인건비)의 20% 이내"});
+  const capE = c.entrustBase * 0.4;
+  if(c.entrust > capE + eps)
+    w.push({k:"err", t:"위탁연구개발비가 한도를 넘습니다",
+      d:"(직접비 빼기 위탁·국제공동·연구개발부담비)인 "+budWon(c.entrustBase)+"원의 40%인 "+budWon(capE)+"원까지입니다 (현재 "+budWon(c.entrust)+"원).", l:USE});
+  const capI = Math.min(Math.max(0, c.innovBase) * 0.1, 50000000);
+  if(c.innov > capI + eps)
+    w.push({k:"err", t:"연구혁신비가 한도를 넘습니다",
+      d:"직접비(경직성 비용 제외) "+budWon(c.innovBase)+"원의 10%와 5,000만원 중 작은 값인 "+budWon(capI)+"원까지입니다 (현재 "+budWon(c.innov)+"원).",
+      l:USE+" · 2026.5.6. 시행 신설 비목"});
+  if(c.org.profit && c.r > 0.1001)
+    w.push({k:"err", t:"영리기관 간접비율이 한도를 넘습니다",
+      d:"영리기관은 수정직접비의 10% 범위에서 계상합니다 (현재 "+r1(c.r*100)+"%).", l:USE});
+  if(!c.org.profit && c.r > 0)
+    w.push({k:"warn", t:"비영리기관은 기관별 간접비 고시비율을 씁니다",
+      d:"지금 "+r1(c.r*100)+"%로 계산 중입니다. 소속 기관의 고시비율을 확인해 넣으세요 (범부처 연구비통합관리시스템에서 조회).", l:USE});
+  if(!BUD.secure && c.security > eps)
+    w.push({k:"warn", t:"보안과제가 아닌데 보안수당이 잡혀 있습니다",
+      d:"보안수당은 보안과제로 분류된 과제에서만 계상할 수 있습니다. 보안과제를 체크하거나 비중을 0으로 두세요.",
+      l:"혁신법 제21조제2항 · 시행령 [별표2] 직접비 차목"});
+  if(!w.length)
+    w.push({k:"ok", t:"법정 한도 위반 없음",
+      d:"연구수당·위탁·연구혁신비·간접비율·부담비율이 모두 기준 안에 있습니다.", l:""});
+  return w;
+}
+
+function budBadItem(it, c){
+  const eps = 1;
+  if(it.rule === "allowance") return it.amt > c.laborMod * 0.2 + eps;
+  if(it.rule === "entrust")   return it.amt > c.entrustBase * 0.4 + eps;
+  if(it.rule === "innov")     return it.amt > Math.min(Math.max(0,c.innovBase)*0.1, 50000000) + eps;
+  if(it.rule === "security")  return !BUD.secure && it.amt > eps;
+  return false;
+}
+function budFind(id){ return BUD.items.find(x => x.id === id); }
+
+function budRender(){
+  const b = BUD, c = budCalc();
+  const A = BUD_AGENCY[b.agency] || BUD_AGENCY.iitp;
+  const $ = function(id){ return document.getElementById(id); };
+
+  const projSel = $("budProj");
+  if(projSel){
+    projSel.innerHTML = ['<option value="">과제 선택 안 함</option>']
+      .concat((PROJECTS||[]).map(p => '<option value="'+budEsc(p.name)+'">'+budEsc(p.name)+'</option>')).join("");
+    projSel.value = b.proj || "";
+  }
+  const agSel = $("budAgency");
+  if(agSel && !agSel.dataset.filled){
+    agSel.innerHTML = Object.keys(BUD_AGENCY).map(k => '<option value="'+k+'">'+budEsc(BUD_AGENCY[k].label)+'</option>').join("");
+    agSel.dataset.filled = "1";
+  }
+  if(agSel) agSel.value = b.agency;
+  const orgSel = $("budOrg");
+  if(orgSel && !orgSel.dataset.filled){
+    orgSel.innerHTML = Object.keys(BUD_ORG).map(k => '<option value="'+k+'">'+budEsc(BUD_ORG[k].label)+'</option>').join("");
+    orgSel.dataset.filled = "1";
+  }
+  if(orgSel) orgSel.value = b.org;
+
+  const setv = function(id, v){ const e = $(id); if(e && document.activeElement !== e) e.value = v; };
+  setv("budTotal",    budWon(c.T));
+  setv("budGov",      r1(c.govPct));
+  setv("budCash",     budWon(c.cash));
+  setv("budIndirect", r1(c.r*100));
+  setv("budMonths",   b.months);
+  setv("budAvgPay",   b.avgPay ? budWon(b.avgPay) : "");
+  const sc = $("budSecure"); if(sc) sc.checked = !!b.secure;
+
+  $("budNote").innerHTML = "<b>"+budEsc(A.label)+"</b> — "+budEsc(A.desc)+"<br>"
+    + "이 탭은 <b>계산기</b>입니다. 입력값은 이 브라우저에만 저장되고 참여율 공유 데이터는 건드리지 않아요. 권한 없이 누구나 씁니다.";
+
+  $("budCards").innerHTML = [
+    {hi:1, k:"총 연구개발비", v:budShort(c.T)+"원", s:b.months+"개월 · "+budEsc(A.label.split(" · ")[0])},
+    {k:"직접비",   v:budShort(c.D)+"원", s:"총액의 "+r1(c.T ? c.D/c.T*100 : 0)+"%"},
+    {k:"간접비",   v:budShort(c.I)+"원", s:"수정직접비 "+budShort(c.MD)+" × "+r1(c.r*100)+"%"},
+    {k:"정부지원", v:budShort(c.G)+"원", s:r1(c.govPct)+"% (상한 "+c.org.gov+"%)"},
+    {k:"기관부담", v:budShort(c.B)+"원", s:c.B>0 ? "현금 "+budShort(c.cash)+" · 현물 "+budShort(c.inkind) : "부담 없음"}
+  ].map(x => '<div class="budcard'+(x.hi?" hi":"")+'"><div class="k">'+x.k+'</div><div class="v">'+x.v+'</div><div class="s">'+x.s+'</div></div>').join("");
+
+  $("budWarn").innerHTML = budWarnings(c).map(w =>
+    '<div class="budw '+w.k+'"><div><span class="wt">'+budEsc(w.t)+'</span> — '+budEsc(w.d)
+    + (w.l ? '<span class="wl">근거 · '+budEsc(w.l)+'</span>' : '') + '</div></div>').join("");
+
+  let h = '<thead><tr><th>비목</th><th class="n" style="width:86px">비중(%)</th>'
+        + '<th class="n" style="width:146px">금액(원)</th><th class="n" style="width:106px"></th></tr></thead><tbody>';
+  c.rows.forEach(function(it){
+    const bad = budBadItem(it, c) ? " over" : "";
+    h += '<tr class="grp"><td><input class="budname" data-nm="'+it.id+'" value="'+budEsc(it.name)+'"></td>'
+      + '<td class="n"><input class="budpct'+bad+'" data-pct="'+it.id+'" value="'+r1(budNum(it.pct))+'"></td>'
+      + '<td class="n"><input class="budamt'+bad+'" data-amt="'+it.id+'" value="'+budWon(it.amt)+'"></td>'
+      + '<td><div class="budacts">'
+      + '<button class="budic'+(it.lock?" on":"")+'" data-lock="'+it.id+'" title="비중 고정">'+(it.lock?BUD_LOCK:BUD_UNLOCK)+'</button>'
+      + '<button class="budic" data-addkid="'+it.id+'" title="세부항목 추가">+</button>'
+      + '<button class="budic del" data-del="'+it.id+'" title="비목 삭제">&times;</button>'
+      + '</div></td></tr>';
+    it.kids.forEach(function(k){
+      h += '<tr class="kid"><td><input class="budname" data-knm="'+it.id+'|'+k.id+'" value="'+budEsc(k.name)+'"></td>'
+        + '<td class="n"><input class="budpct" data-kpct="'+it.id+'|'+k.id+'" value="'+r1(budNum(k.pct))+'"></td>'
+        + '<td class="n"><input class="budamt" data-kamt="'+it.id+'|'+k.id+'" value="'+budWon(k.amt)+'"></td>'
+        + '<td><div class="budacts"><button class="budic del" data-kdel="'+it.id+'|'+k.id+'" title="항목 삭제">&times;</button></div></td></tr>';
+    });
+  });
+  h += '<tr class="budaddrow"><td colspan="4"><button class="budadd" id="budAddItem">+ 비목 추가</button></td></tr>';
+  h += '<tr class="tot"><td>직접비 합계</td><td class="n">'+r1(c.sumPct)+'</td><td class="n">'+budWon(c.D)+'</td><td></td></tr>';
+  h += '<tr class="tot"><td>간접비</td><td class="n">—</td><td class="n">'+budWon(c.I)+'</td><td></td></tr>';
+  h += '<tr class="tot"><td>총 연구개발비</td><td class="n">—</td><td class="n">'+budWon(c.D + c.I)+'</td><td></td></tr>';
+  $("budTbl").innerHTML = h + '</tbody>';
+
+  /* 참여율 데이터와 교차 점검 */
+  const link = $("budLink");
+  const pj = (b.proj && PROJECTS) ? PROJECTS.find(p => p.name === b.proj) : null;
+  if(pj){
+    let pm = 0, heads = 0;
+    pj.people.forEach(function(pe){
+      if(isRetired(pe.n)) return;
+      heads++;
+      (pe.s||[]).forEach(function(s){ pm += (budNum(s[0])/100) * (s[2]-s[1]+1); });
+    });
+    const py = pm / 12;
+    const need = b.avgPay ? py * budNum(b.avgPay) : 0;
+    const got = c.rows.filter(x => x.rule === "labor").reduce((a,x) => a + x.amt, 0);
+    let s = '<span>참여율 연계 · <b>'+budEsc(pj.name)+'</b></span><span>재직 참여 <b>'+heads+'명</b></span>'
+          + '<span>연간 환산 <b>'+r1(py)+'인·년</b> ('+r1(pm)+'인·월)</span>';
+    if(need > 0){
+      const gap = got - need;
+      s += '<span>소요 인건비 <b>'+budShort(need)+'원</b></span>'
+        + '<span style="color:'+(gap<0?"var(--red)":"var(--green)")+'">편성 대비 <b>'+(gap>=0?"+":"")+budShort(gap)+'원</b></span>';
+    } else {
+      s += '<span style="color:var(--sub)">인당 평균 인건비를 넣으면 편성 인건비와 비교해 드려요.</span>';
+    }
+    link.innerHTML = s; link.style.display = "";
+  } else { link.innerHTML = ""; link.style.display = "none"; }
+
+  $("budLaw").innerHTML = '<h4>계산에 쓴 기준</h4><ul>'
+    + '<li><span class="tag law">법령</span><b>부담 비율</b> — 중소 정부 75%·현금 10%, 중견 70%·13%, 대기업·공기업 50%·15%, 비영리 100%. 현금 비율은 <b>기관부담금 대비</b>입니다. (혁신법 시행령 [별표1])</li>'
+    + '<li><span class="tag law">법령</span><b>비목 구성</b> — 인건비·학생인건비·연구시설장비비·연구재료비·위탁·국제공동·연구개발부담비·연구활동비·연구수당·보안수당, 그리고 간접비. (시행령 [별표2])</li>'
+    + '<li><span class="tag law">법령</span><b>연구수당</b> ≤ 수정인건비 × 20%. 수정인건비 = 인건비(현물 포함, 연구근접지원인력 제외) + 학생인건비 + 미지급인건비.</li>'
+    + '<li><span class="tag law">법령</span><b>위탁연구개발비</b> ≤ (직접비 − 위탁 − 국제공동 − 연구개발부담비) × 40%.</li>'
+    + '<li><span class="tag law">법령</span><b>간접비</b> = 수정직접비 × 간접비율. 수정직접비 = 직접비 − 현물 − 위탁 − 국제공동 − 연구개발부담비. 영리기관은 <b>10% 이내</b>, 비영리는 기관별 고시비율.</li>'
+    + '<li><span class="tag law">법령</span><b>연구혁신비</b> — 2026.5.6. 신설된 직접비 자율비목. 직접비(경직성 비용 제외)의 10%, 최대 5,000만원. 사업별 적용 시점이 다르니 공고를 확인하세요.</li>'
+    + '<li><span class="tag prac">관행</span><b>기관별 초기 비중</b> — 법에 정해진 수치가 아니라 편성 관행에서 잡은 출발점입니다. 실제 배분은 공고·RFP·협약에 맞춰 조정하세요.</li>'
+    + '</ul>';
+  budBind();
+}
+
+function budBind(){
+  const T = document.getElementById("budTbl");
+  const commit = function(){ budSave(); budRender(); };
+  T.querySelectorAll("[data-nm]").forEach(function(e){ e.onchange = function(){
+    const it = budFind(e.dataset.nm); if(it){ it.name = e.value.trim() || "이름 없음"; commit(); } }; });
+  T.querySelectorAll("[data-pct]").forEach(function(e){ e.onchange = function(){
+    const it = budFind(e.dataset.pct); if(!it) return;
+    it.pct = Math.max(0, Math.min(100, budNum(e.value))); budNorm(BUD.items, it.id); commit(); }; });
+  T.querySelectorAll("[data-amt]").forEach(function(e){ e.onchange = function(){
+    const it = budFind(e.dataset.amt), c = budCalc(); if(!it || !c.D) return;
+    it.pct = Math.max(0, Math.min(100, budNum(e.value) / c.D * 100)); budNorm(BUD.items, it.id); commit(); }; });
+  T.querySelectorAll("[data-lock]").forEach(function(e){ e.onclick = function(){
+    const it = budFind(e.dataset.lock); if(it){ it.lock = !it.lock; commit(); } }; });
+  T.querySelectorAll("[data-del]").forEach(function(e){ e.onclick = function(){
+    const i = BUD.items.findIndex(x => x.id === e.dataset.del); if(i < 0) return;
+    if(BUD.items.length <= 1){ toast("비목이 하나는 남아 있어야 해요."); return; }
+    BUD.items.splice(i,1); budNorm(BUD.items); commit(); }; });
+  T.querySelectorAll("[data-addkid]").forEach(function(e){ e.onclick = function(){
+    const it = budFind(e.dataset.addkid); if(!it) return;
+    it.kids = it.kids || [];
+    it.kids.push({id:"k"+Date.now(), name:"새 항목", pct:0});
+    budNormKids(it.kids); commit(); }; });
+  T.querySelectorAll("[data-knm]").forEach(function(e){ e.onchange = function(){
+    const a = e.dataset.knm.split("|"), it = budFind(a[0]); if(!it) return;
+    const kid = it.kids.find(x => x.id === a[1]); if(kid){ kid.name = e.value.trim() || "이름 없음"; commit(); } }; });
+  T.querySelectorAll("[data-kpct]").forEach(function(e){ e.onchange = function(){
+    const a = e.dataset.kpct.split("|"), it = budFind(a[0]); if(!it) return;
+    const kid = it.kids.find(x => x.id === a[1]); if(!kid) return;
+    kid.pct = Math.max(0, budNum(e.value)); budNormKids(it.kids); commit(); }; });
+  T.querySelectorAll("[data-kamt]").forEach(function(e){ e.onchange = function(){
+    const a = e.dataset.kamt.split("|"), it = budFind(a[0]); if(!it) return;
+    const kid = it.kids.find(x => x.id === a[1]); if(!kid) return;
+    const c = budCalc(), row = c.rows.find(x => x.id === a[0]);
+    if(!row || !row.amt) return;
+    kid.pct = Math.max(0, budNum(e.value) / row.amt * 100); budNormKids(it.kids); commit(); }; });
+  T.querySelectorAll("[data-kdel]").forEach(function(e){ e.onclick = function(){
+    const a = e.dataset.kdel.split("|"), it = budFind(a[0]); if(!it) return;
+    it.kids = it.kids.filter(x => x.id !== a[1]);
+    if(it.kids.length) budNormKids(it.kids);
+    commit(); }; });
+  const add = document.getElementById("budAddItem");
+  if(add) add.onclick = function(){
+    BUD.items.push({id:"c"+Date.now(), name:"새 비목", rule:"", pct:0, lock:false, kids:[]});
+    commit(); };
+}
+
+function budXlsx(){
+  const b = BUD, c = budCalc(), A = BUD_AGENCY[b.agency] || BUD_AGENCY.iitp;
+  const rows = [
+    ["연구개발비 편성표"], [],
+    ["과제", b.proj || "(미지정)"], ["발주기관", A.label], ["기관 유형", c.org.label],
+    ["연구기간(개월)", b.months], ["보안과제", b.secure ? "예" : "아니오"], [],
+    ["총 연구개발비(원)", Math.round(c.T)],
+    ["  정부지원연구개발비", Math.round(c.G), r1(c.govPct)+"%"],
+    ["  기관부담연구개발비", Math.round(c.B), c.org.cash ? "현금 "+c.org.cash+"% 이상" : ""],
+    ["    현금", Math.round(c.cash)], ["    현물", Math.round(c.inkind)], [],
+    ["비목", "비중(%)", "금액(원)"]
+  ];
+  c.rows.forEach(function(it){
+    rows.push([it.name, r1(budNum(it.pct)), Math.round(it.amt)]);
+    it.kids.forEach(function(k){ rows.push(["    "+k.name, r1(budNum(k.pct))+" (비목 내)", Math.round(k.amt)]); });
+  });
+  rows.push(["직접비 합계", r1(c.sumPct), Math.round(c.D)]);
+  rows.push(["간접비", "", Math.round(c.I)]);
+  rows.push(["총계", "", Math.round(c.D + c.I)]);
+  rows.push([]); rows.push(["검증 결과"]);
+  budWarnings(c).forEach(function(w){
+    rows.push([w.k === "ok" ? "적합" : (w.k === "err" ? "위반" : "확인"), w.t, w.d, w.l]); });
+  rows.push([]); rows.push(["한도 계산 근거"]);
+  rows.push(["수정인건비", Math.round(c.laborMod), "연구수당 한도 "+Math.round(c.laborMod*0.2)]);
+  rows.push(["수정직접비", Math.round(c.MD), "간접비 = 수정직접비 × "+r1(c.r*100)+"%"]);
+  rows.push(["위탁 산정기준액", Math.round(c.entrustBase), "위탁 한도 "+Math.round(c.entrustBase*0.4)]);
+  rows.push(["연구혁신비 기준액", Math.round(c.innovBase), "한도 "+Math.round(Math.min(Math.max(0,c.innovBase)*0.1, 50000000))]);
+  try{
+    const buf = buildXlsx([{name:"연구개발비 편성", rows:rows}]);
+    const blob = new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const url = URL.createObjectURL(blob);
+    const d = new Date(), st = d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+    const a = document.createElement("a");
+    a.href = url; a.download = "연구개발비편성_"+(b.proj||"과제")+"_"+st+".xlsx";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 1000);
+    toast("편성표를 내려받았어요.");
+  }catch(e){ toast("엑셀 생성 실패: "+e.message); }
+}
+
+function budInit(){
+  BUD = budLoad();
+  const on = function(id, ev, fn){ const e = document.getElementById(id); if(e) e.addEventListener(ev, fn); };
+  on("budProj","change", function(e){ BUD.proj = e.target.value; budSave(); budRender(); });
+  on("budAgency","change", function(e){
+    BUD.agency = e.target.value;
+    const A = BUD_AGENCY[BUD.agency];
+    BUD.items = budSeed(A.mix);
+    BUD.secure = A.secure;
+    if(BUD_ORG[BUD.org].profit) BUD.indirect = A.indirect;
+    budSave(); budRender();
+    toast(A.label.split(" · ")[0]+" 기준으로 비중을 다시 잡았어요.");
+  });
+  on("budOrg","change", function(e){
+    BUD.org = e.target.value;
+    const o = BUD_ORG[BUD.org];
+    BUD.govPct = o.gov; BUD.cash = null; BUD.indirect = o.profit ? 10 : 20;
+    budSave(); budRender();
+  });
+  on("budTotal","change",    function(e){ BUD.total = budNum(e.target.value); BUD.cash = null; budSave(); budRender(); });
+  on("budGov","change",      function(e){ BUD.govPct = budNum(e.target.value); BUD.cash = null; budSave(); budRender(); });
+  on("budCash","change",     function(e){ BUD.cash = budNum(e.target.value); budSave(); budRender(); });
+  on("budIndirect","change", function(e){ BUD.indirect = budNum(e.target.value); budSave(); budRender(); });
+  on("budMonths","change",   function(e){ BUD.months = Math.max(1, Math.round(budNum(e.target.value)) || 12); budSave(); budRender(); });
+  on("budAvgPay","change",   function(e){ BUD.avgPay = budNum(e.target.value); budSave(); budRender(); });
+  on("budSecure","change",   function(e){ BUD.secure = e.target.checked; budSave(); budRender(); });
+  on("budResetBtn","click",  function(){ BUD = budDefault(BUD.proj, BUD.agency); budSave(); budRender(); toast("기본값으로 되돌렸어요."); });
+  on("budXlsxBtn","click",   budXlsx);
+  const nb = document.getElementById("navBudget");
+  if(nb) nb.addEventListener("click", function(){
+    restoreIfEditing(); view = "budget"; selected = null; pushView(); render(); window.scrollTo(0,0); });
+}
+
 </script>
 </body>
 </html>
