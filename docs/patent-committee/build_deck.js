@@ -165,11 +165,10 @@ const TB = { type: "solid", color: LINE, pt: 1 };
     [cell("제12조\n직무발명 완성사실의 통지", { bold: true, color: NAVY, fontSize: 10.5 }), cell("종업원은 직무발명을 완성한 경우 지체 없이 사용자에게 문서로 통지", { align: "left" }), cell("직무발명 신고서 제출", { color: BLUE, bold: true })],
     [cell("제13조\n승계 여부의 통지", { bold: true, color: NAVY, fontSize: 10.5 }), cell("승계 규정이 있는 경우 발명 완성 시 권리 승계, 미승계 시 4개월 이내 서면 통지 (시행령 제7조)", { align: "left" }), cell("위원회 심의 및 결과 통지", { color: BLUE, bold: true })],
     [cell("제15조\n직무발명에 대한 보상", { bold: true, color: NAVY, fontSize: 10.5 }), cell("권리 승계 시 정당한 보상, 보상 기준은 종업원과 협의하여 규정으로 정함", { align: "left" }), cell("직무발명 보상규정(안) 제정", { color: BLUE, bold: true })],
-    [cell("제16조\n출원 유보 시의 보상", { bold: true, color: NAVY, fontSize: 10.5 }), cell("승계 후 출원하지 않거나 출원을 포기·취하한 경우에도 정당한 보상", { align: "left" }), cell("출원유보보상금 지급", { color: BLUE, bold: true })],
     [cell("제19조\n비밀유지의 의무", { bold: true, color: NAVY, fontSize: 10.5 }), cell("사용자가 출원할 때까지 발명 내용의 비밀유지 (위반 시 제58조 벌칙)", { align: "left" }), cell("신고서 서약 · 양도계약 제7조", { color: BLUE, bold: true })],
   ];
-  s.addTable(rows, { x: MX, y: 2.14, w: CW, colW: [2.35, 5.68, 3.30], rowH: 0.56, border: TB, fill: { color: WHITE }, fontFace: F });
-  note(s, 5.86, "※ 사전 승계 규정이 있는 경우 권리는 발명을 완성한 때부터 회사에 승계되며, 접수일부터 4개월 이내에 미승계 사실을 통지하지 않으면 승계한 것으로 처리됩니다.\n※ 보상에 이의가 있는 경우에는 「발명진흥법」 제17조에 따른 직무발명심의위원회를 별도로 구성하여 심의합니다. (특허심의위원회와 별개 기구)", 0.78);
+  s.addTable(rows, { x: MX, y: 2.14, w: CW, colW: [2.35, 5.68, 3.30], rowH: 0.66, border: TB, fill: { color: WHITE }, fontFace: F });
+  note(s, 5.70, "※ 사전 승계 규정이 있는 경우 권리는 발명을 완성한 때부터 회사에 승계되며, 접수일부터 4개월 이내에 미승계 사실을 통지하지 않으면 승계한 것으로 처리됩니다.\n※ 보상에 이의가 있는 경우에는 「발명진흥법」 제17조에 따른 직무발명심의위원회를 별도로 구성하여 심의합니다. (특허심의위원회와 별개 기구)", 0.78);
 }
 
 /* ── 6. 위원회 구성 및 운영 ──────────────────────────── */
@@ -244,30 +243,32 @@ const TB = { type: "solid", color: LINE, pt: 1 };
 /* ── 8. 보상 체계 ────────────────────────────────────── */
 {
   const s = page("보상 기준", "직무발명 보상규정(안)",
-    "「발명진흥법」 제15조에 따라 보상의 종류·금액·지급 방법을 규정으로 정하고, 심의 시 결정된 등급(A·B·C)에 따라 차등 지급합니다.\n아래 금액은 특허 1건 기준이며, 발명자가 2명 이상인 경우 발명신고서에 기재된 기여율로 분배합니다.", 7);
-  pill(s, 2.12, "보상의 종류 및 금액 (특허 1건 기준)");
+    "「발명진흥법」 제15조에 따라 보상의 종류·금액·지급 방법을 규정으로 정하고, 심의 시 결정된 등급(A·B·C)에 따라 차등 지급합니다.\n보상은 국내 출원 시와 국내 등록 시 두 차례 지급하며, 아래 금액은 특허 1건 기준입니다.", 7);
+  pill(s, 2.10, "보상의 종류 및 금액 (특허 1건 기준)");
   const hd = { fill: BLUE, bold: true, color: WHITE, fontSize: 11.5 };
   const nm = { bold: true, color: NAVY, align: "left", fontSize: 11 };
+  const sm = { fill: TBLHD, bold: true, color: NAVY, fontSize: 11 };
   const rows = [
     [cell("보상 종류", hd), cell("지급 시기", hd), cell("A등급", hd), cell("B등급", hd), cell("C등급", hd)],
     [cell("출원보상금", nm), cell("국내 출원일"), cell("150만원", { bold: true, color: BLUE }), cell("100만원"), cell("50만원")],
     [cell("등록보상금", nm), cell("국내 등록일"), cell("150만원", { bold: true, color: BLUE }), cell("100만원"), cell("50만원")],
-    [cell("출원유보보상금", nm), cell("유보·포기 결정일"), cell("75만원", { bold: true, color: BLUE }), cell("50만원"), cell("25만원")],
-    [cell("해외출원보상금", nm), cell("해외 출원일"), cell("국가당 50만원  (등급 무관)", { colspan: 3, fill: SOFT, bold: true, color: NAVY })],
-    [cell("처분·실시보상금", nm), cell("수익 발생 연도 종료 후 3개월 내"), cell("순수익의 10%  (등급 무관)", { colspan: 3, fill: SOFT, bold: true, color: NAVY })],
+    [cell("합       계", Object.assign({ align: "left" }, sm)), cell("특허 1건 기준", sm), cell("300만원", Object.assign({}, sm, { color: BLUE })), cell("200만원", sm), cell("100만원", sm)],
   ];
-  s.addTable(rows, { x: MX, y: 2.68, w: CW, colW: [2.35, 3.10, 1.96, 1.96, 1.96], rowH: 0.50, border: TB, fill: { color: WHITE }, fontFace: F });
-  const notes = [
-    ["출원보상금", "등록 여부와 무관하게 지급하며, 등록 거절·취하 시에도 회수하지 않습니다. 분할·계속출원에 대하여는 중복 지급하지 않습니다."],
-    ["해외출원보상금", "발명자 1인당 연간 2개국을 한도로 하며, 원칙적으로 A등급 발명을 우선 검토합니다."],
-    ["세무 처리", "「소득세법」 제12조제3호 어목에 따라 연간 700만원까지 비과세되며, 지급 전 해당 연도 누적 지급액을 확인합니다."],
+  s.addTable(rows, { x: MX, y: 2.62, w: CW, colW: [2.35, 3.10, 1.96, 1.96, 1.96], rowH: 0.54, border: TB, fill: { color: WHITE }, fontFace: F });
+  const rule = [
+    ["공동발명 분배 (제7조)", "발명자가 2명 이상인 경우 발명신고서에 기재된 기여율에 따라 분배하며, 합계액은 건당 보상액을 초과하지 않습니다."],
+    ["출원보상금의 성격 (제5조)", "등록 여부와 무관하게 지급하며, 등록 거절·취하 시에도 회수하지 않습니다. 분할·계속출원은 중복 지급하지 않습니다."],
+    ["지급 시기 및 통지 (제9조)", "지급 사유가 발생한 날이 속하는 달의 다음 달 급여 지급일에 지급하고, 등급과 항목별 점수를 서면 통지합니다."],
+    ["감액 · 부지급 (제8조)", "허위 기재, 무단 공개로 인한 신규성 상실, 절차 협력 거부의 경우 위원회 의결로 감액하거나 지급하지 않을 수 있습니다."],
   ];
-  notes.forEach((n, i) => {
-    const y = 5.76 + i * 0.38;
-    rect(s, { x: MX, y, w: 1.55, h: 0.30, fill: { color: TBLHD }, line: { color: LINE, width: 1 } });
-    txt(s, n[0], { x: MX, y, w: 1.55, h: 0.30, fontSize: 10, bold: true, color: NAVY, align: "center", valign: "middle" });
-    txt(s, n[1], { x: MX + 1.75, y, w: CW - 1.75, h: 0.30, fontSize: 10, color: TXT, valign: "middle" });
+  const rw = (CW - 3 * 0.24) / 4;
+  rule.forEach((r, i) => {
+    const x = MX + i * (rw + 0.24);
+    hbar(s, { x, y: 5.04, w: rw, h: 0.42, t: r[0], fs: 11 });
+    wbox(s, { x, y: 5.46, w: rw, h: 0.96 });
+    txt(s, r[1], { x: x + 0.16, y: 5.46, w: rw - 0.32, h: 0.96, fontSize: 10, color: TXT, valign: "middle", lineSpacing: 15 });
   });
+  txt(s, "※ 보상금은 「소득세법」 제12조제3호 어목에 따라 연간 700만원까지 비과세되며, 재직 중 지급분은 근로소득, 퇴직 후 지급분은 기타소득으로 처리합니다.", { x: MX, y: 6.54, w: CW, h: 0.28, fontSize: 9.5, color: MUTED });
 }
 
 /* ── 9. 등급 결정 기준 ───────────────────────────────── */
