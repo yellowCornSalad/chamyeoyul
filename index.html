@@ -333,6 +333,7 @@ const SB_URL = "https://pkencmbryzgtnwrxlksz.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZW5jbWJyeXpndG53cnhsa3N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDYyOTIsImV4cCI6MjA5NDkyMjI5Mn0.Jx8qCUlVgGLDzKiscMetgEGjZ4FSs2ptTixvaUO7IvA";
 const SB_H = { apikey:SB_KEY, Authorization:"Bearer "+SB_KEY };
 const TABLE = "participation_versions";
+const SAVE_FN = SB_URL + "/functions/v1/save-participation";
 
 let PROJECTS=null, INDEX={}, NAMES=[];
 let sessionPassword=null, loadedVersionId=null, editing=null, editBackup=null;
@@ -380,14 +381,17 @@ async function encryptProjects(projects, password){
 
 /* ===== Supabase ===== */
 async function sbLatest(n){
-  const r = await fetch(`${SB_URL}/rest/v1/${TABLE}?select=id,created_at,blob&order=created_at.desc&limit=${n||5}`, {headers:SB_H});
+  const r = await fetch(`${SB_URL}/rest/v1/${TABLE}?select=id,created_at,blob,editor&order=created_at.desc&limit=${n||5}`, {headers:SB_H});
   if(!r.ok) throw new Error("sb "+r.status);
   return r.json();
 }
 async function sbInsert(blobObj){
-  const r = await fetch(`${SB_URL}/rest/v1/${TABLE}`, {method:"POST", headers:{...SB_H,"Content-Type":"application/json",Prefer:"return=representation"}, body:JSON.stringify({blob:JSON.stringify(blobObj)})});
-  if(!r.ok) throw new Error("sb insert "+r.status);
-  return (await r.json())[0];
+  // 저장은 반드시 Edge Function 경유 — 서버가 비밀번호를 검증하고 작성자를 기록한다
+  const r = await fetch(SAVE_FN, {method:"POST", headers:{...SB_H,"Content-Type":"application/json"},
+    body: JSON.stringify({ pw: sessionPassword, blob: JSON.stringify(blobObj) })});
+  let out=null; try{ out=await r.json(); }catch(e){}
+  if(!r.ok) throw new Error((out&&out.error)||("저장 서버 오류 "+r.status));
+  return { id: out.id, editor: out.editor };
 }
 async function identify(password){
   for(const a of AUTH){ try{ const p=await decryptBlob(a, password); if(p&&p.id) return p; }catch(e){} }
@@ -821,7 +825,7 @@ async function loadHistory(){
       try{ HIST_CACHE[r.id]=await openBlob(JSON.parse(r.blob)); }catch(e){ HIST_CACHE[r.id]=null; } } }
     histRows=rows.map((r,i)=>{
       const cur=HIST_CACHE[r.id], prev=rows[i+1]?HIST_CACHE[rows[i+1].id]:null;
-      return { id:r.id, at:r.created_at, who: cur&&cur.byName||null,
+      return { id:r.id, at:r.created_at, who: r.editor || (cur&&cur.byName) || null,
         summary: (cur&&prev)?diffSummary(prev.projects,cur.projects):(i===rows.length-1?"최초 등록":"—") };
     });
     renderHistory();
