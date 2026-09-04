@@ -1035,7 +1035,7 @@ function renderHistory(){
     return `<div class="histrow"><span class="histwhen">${whenText(h.at)}</span>`
       +`<span class="histwhat" title="${h.summary.replace(/"/g,"&quot;")}">${h.who?`<b class="histwho">${h.who}</b> · `:''}${h.summary}</span>`
       +(isNow?`<span class="histnow">현재</span>`
-             :`<button class="histback" data-rb="${h.id}">이 시점으로</button>`)+`</div>`;
+             :(isAdmin()?`<button class="histback" data-rb="${h.id}">이 시점으로</button>`:``))+`</div>`;
   }).join("");
   const tg=document.getElementById("histToggle");
   tg.style.display = histRows.length>3?"":"none";
@@ -1046,7 +1046,22 @@ async function rollbackTo(id){
   const rec=HIST_CACHE[id]; const data=rec&&rec.projects; if(!data){ toast("그 시점 내용을 읽을 수 없어요."); return; }
   if(!isAdmin()){ toast("열람 전용 계정입니다."); return; }
   const row=histRows.find(h=>h.id===id);
-  if(!confirm(`${row?whenText(row.at):"이 시점"} 상태로 되돌릴까요?\n\n${row?row.summary:""}\n\n되돌린 내용도 새 이력으로 남고, 모든 접속자에게 반영됩니다.`)) return;
+  /* 저장이 '내 담당 과제만' 병합하므로 되돌리기 범위도 담당 과제로 한정된다 */
+  const cur={}, old={};
+  PROJECTS.forEach(x=>{ if(x.own===ME.id) cur[x.name]=JSON.stringify(x); });
+  data.forEach(x=>{ if(x.own===ME.id) old[x.name]=JSON.stringify(x); });
+  const changed=[...new Set(Object.keys(cur).concat(Object.keys(old)))].filter(nm=>cur[nm]!==old[nm]);
+  if(!changed.length){ toast("내 담당 과제는 이 시점과 같아요. 되돌릴 게 없습니다."); return; }
+  if(!confirm(`${row?whenText(row.at):"이 시점"} 상태로 되돌릴까요?
+
+${row?row.summary:""}
+
+`
+    +`되돌아가는 과제: ${changed.join(", ")} (${changed.length}개)
+`
+    +`다른 담당자의 과제는 그대로 유지됩니다.
+`
+    +`되돌린 내용도 새 이력으로 남습니다.`)) return;
   const snapshot=JSON.parse(JSON.stringify(PROJECTS));
   restoreIfEditing(); selected=null;
   PROJECTS=JSON.parse(JSON.stringify(data)); buildIndex();
