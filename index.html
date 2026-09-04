@@ -1064,9 +1064,21 @@ ${row?row.summary:""}
     +`되돌린 내용도 새 이력으로 남습니다.`)) return;
   const snapshot=JSON.parse(JSON.stringify(PROJECTS));
   restoreIfEditing(); selected=null;
-  PROJECTS=JSON.parse(JSON.stringify(data)); buildIndex();
+  /* 전체를 갈아치우지 않고 내 담당 과제만 그 시점 상태로 되돌린다.
+     남의 과제는 손대지 않으므로 저장 전 화면도 실제 결과와 같다. */
+  const mineOld={}; data.forEach(x=>{ if(x.own===ME.id) mineOld[x.name]=x; });
+  const next=[];
+  for(const p of PROJECTS){
+    if(p.own!==ME.id){ next.push(p); continue; }
+    if(mineOld[p.name]) next.push(JSON.parse(JSON.stringify(mineOld[p.name])));
+    /* 그 시점에 없던 내 과제 = 이후에 만든 것이므로 되돌리면 사라진다 */
+  }
+  for(const nm in mineOld){
+    if(!next.some(p=>p.name===nm)) next.push(JSON.parse(JSON.stringify(mineOld[nm])));
+  }
+  PROJECTS=next; buildIndex();
   try{
-    const ok=await saveProjects("되돌렸습니다. 모든 접속자에게 반영됩니다.");
+    const ok=await saveProjects(`되돌렸습니다 · ${changed.join(", ")}`);
     if(!ok){ PROJECTS=snapshot; buildIndex(); }
   }catch(e){ PROJECTS=snapshot; buildIndex(); toast("되돌리기 실패: "+e.message); }
   render(); loadHistory();
