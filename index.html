@@ -473,6 +473,10 @@
           <label>기관부담 현금 (원)<input id="budCash" type="text" inputmode="numeric" autocomplete="off"></label>
           <label>간접비율 (%)<input id="budIndirect" type="number" step="0.01" min="0"></label>
           <label>연구기간 (개월)<input id="budMonths" type="number" step="1" min="1" max="60"></label>
+          <label>금액 끝자리<select id="budUnitRound">
+            <option value="1">원 단위</option><option value="1000">천원 단위</option>
+            <option value="10000">만원 단위</option><option value="100000">십만원 단위</option>
+            <option value="1000000">백만원 단위</option></select></label>
           <label>인당 평균 인건비 (연, 원)<input id="budAvgPay" type="text" inputmode="numeric" autocomplete="off"></label>
           <label class="chk"><input type="checkbox" id="budSecure"> 보안과제</label>
         </div>
@@ -1308,11 +1312,15 @@ function budDefault(proj, agency){
   agency = BUD_AGENCY[agency] ? agency : "iitp";
   const a = BUD_AGENCY[agency];
   return { proj: proj||"", agency:agency, org:"sme", total:1000000000, govPct:BUD_ORG.sme.gov, cash:null,
-           indirect:a.indirect, months:12, secure:a.secure, avgPay:0, items:budSeed(a.mix) };
+           indirect:a.indirect, months:12, secure:a.secure, avgPay:0, unit:1000, items:budSeed(a.mix) };
 }
 function budLoad(){
   try{ const raw = localStorage.getItem(BUD_KEY);
-    if(raw){ const o = JSON.parse(raw); if(o && Array.isArray(o.items) && o.items.length) return o; } }catch(e){}
+    if(raw){ const o = JSON.parse(raw);
+      if(o && Array.isArray(o.items) && o.items.length){
+        if(!o.unit) o.unit = 1000;   /* 끝자리 맞춤 도입 전 저장본은 천원 단위로 */
+        return o;
+      } } }catch(e){}
   return budDefault("", "iitp");
 }
 function budSave(){ try{ localStorage.setItem(BUD_KEY, JSON.stringify(BUD)); }catch(e){} }
@@ -1352,14 +1360,31 @@ function budNormKids(kids){
   }
 }
 
+/* 각 금액을 unit 배수로 만들되 합계는 정확히 total 이 되게 배분한다(최대잔여법).
+   단순 반올림은 합이 어긋나 총액=직접비+간접비 항등식이 깨진다. */
+function budAlloc(vals, total, unit){
+  const u = Math.max(1, unit), N = vals.length;
+  if(!N) return [];
+  const steps = Math.round(total / u);
+  const raw = vals.map(v => v / u);
+  const base = raw.map(x => Math.floor(Math.max(0, x)));
+  let rest = steps - base.reduce((a,b) => a+b, 0);
+  const order = raw.map((x,i) => ({i:i, f:Math.max(0,x) - Math.floor(Math.max(0,x))}))
+                   .sort((a,b) => b.f - a.f);
+  for(let k=0; rest > 0 && N; k++){ base[order[k % N].i]++; rest--; }
+  for(let k=N-1; rest < 0 && k >= 0; k--){ const i = order[k].i; if(base[i] > 0){ base[i]--; rest++; k = (k===0?N:k); } }
+  return base.map(x => x * u);
+}
 function budCalc(){
   const b = BUD, org = BUD_ORG[b.org] || BUD_ORG.sme;
-  const T = Math.max(0, budNum(b.total));
+  const U = Math.max(1, budNum(b.unit) || 1);
+  const rnd = v => Math.round(v / U) * U;
+  const T = rnd(Math.max(0, budNum(b.total)));
   const r = Math.max(0, budNum(b.indirect)) / 100;
   const govPct = Math.max(0, Math.min(100, budNum(b.govPct)));
-  const G = T * govPct / 100, B = T - G;
+  const G = Math.min(T, rnd(T * govPct / 100)), B = T - G;
   const cashMin = B * org.cash / 100;
-  const cash = Math.max(0, Math.min(B, (b.cash === null || b.cash === undefined) ? cashMin : budNum(b.cash)));
+  const cash = Math.max(0, Math.min(B, rnd((b.cash === null || b.cash === undefined) ? cashMin : budNum(b.cash))));
   const inkind = Math.max(0, B - cash);
 
   const items = b.items;
@@ -1370,16 +1395,25 @@ function budCalc(){
   let D = (1 + r*(1-exFrac)) > 0 ? (T + inkind*r) / (1 + r*(1-exFrac)) : T;
   if(!isFinite(D) || D < 0) D = 0;
   D = Math.min(D, T);
+  /* 간접비를 단위에 맞춰 확정하고 D = T - I 로 잡아 항등식을 유지한다(2회면 수렴) */
+  let I = 0;
+  for(let k=0; k<3; k++){
+    I = Math.max(0, Math.min(T, rnd(Math.max(0, D*(1-exFrac) - inkind) * r)));
+    D = T - I;
+  }
 
-  const rows = items.map(i => {
-    const amt = D * budNum(i.pct) / sumPct;
+  const exactAmts = items.map(i => D * budNum(i.pct) / sumPct);
+  const amts = budAlloc(exactAmts, D, U);
+  const rows = items.map((i, ix) => {
+    const amt = amts[ix];
     const ks = (i.kids||[]).reduce((a,k) => a + budNum(k.pct), 0);
-    const kids = (i.kids||[]).map(k => Object.assign({}, k, {amt: ks ? amt * budNum(k.pct) / ks : 0}));
+    const kexact = (i.kids||[]).map(k => ks ? amt * budNum(k.pct) / ks : 0);
+    const kamts = budAlloc(kexact, amt, U);
+    const kids = (i.kids||[]).map((k, kx) => Object.assign({}, k, {amt: kamts[kx]}));
     return Object.assign({}, i, {amt:amt, kids:kids});
   });
   const by = function(rule){ return rows.filter(x => x.rule === rule).reduce((a,x) => a + x.amt, 0); };
-  const MD = Math.max(0, D*(1-exFrac) - inkind);
-  const I  = Math.max(0, T - D);
+  const MD = Math.max(0, D - by("entrust") - by("intl") - by("burden") - inkind);
 
   const laborMod = by("labor");
   const RIGID = ["labor","allowance","security","entrust","intl","burden","rigid"];
@@ -1387,7 +1421,7 @@ function budCalc(){
   const entrustBase = D - by("entrust") - by("intl") - by("burden");
 
   return {T:T, G:G, B:B, cash:cash, cashMin:cashMin, inkind:inkind, D:D, I:I, MD:MD, rows:rows,
-          sumPct:sumPct, org:org, govPct:govPct, r:r, laborMod:laborMod, innovBase:innovBase,
+          sumPct:sumPct, org:org, govPct:govPct, r:r, U:U, laborMod:laborMod, innovBase:innovBase,
           entrustBase:entrustBase, allowance:by("allowance"), security:by("security"),
           entrust:by("entrust"), innov:by("innov")};
 }
@@ -1471,6 +1505,7 @@ function budRender(){
   setv("budCash",     budWon(c.cash));
   setv("budIndirect", r1(c.r*100));
   setv("budMonths",   b.months);
+  const ur = $("budUnitRound"); if(ur) ur.value = String(Math.max(1, budNum(b.unit) || 1));
   setv("budAvgPay",   b.avgPay ? budWon(b.avgPay) : "");
   const sc = $("budSecure"); if(sc) sc.checked = !!b.secure;
 
@@ -1479,7 +1514,7 @@ function budRender(){
 
   $("budCards").innerHTML = [
     {hi:1, k:"총 연구개발비", v:budShort(c.T)+"원", s:b.months+"개월 · "+budEsc(A.label.split(" · ")[0])},
-    {k:"직접비",   v:budShort(c.D)+"원", s:"총액의 "+r1(c.T ? c.D/c.T*100 : 0)+"%"},
+    {k:"직접비",   v:budShort(c.D)+"원", s:"총액의 "+r1(c.T ? c.D/c.T*100 : 0)+"% · "+(c.U>=1000000?"백만원":c.U>=100000?"십만원":c.U>=10000?"만원":c.U>=1000?"천원":"원")+" 단위"},
     {k:"간접비",   v:budShort(c.I)+"원", s:"수정직접비 "+budShort(c.MD)+" × "+r1(c.r*100)+"%"},
     {k:"정부지원", v:budShort(c.G)+"원", s:r1(c.govPct)+"% (상한 "+c.org.gov+"%)"},
     {k:"기관부담", v:budShort(c.B)+"원", s:c.B>0 ? "현금 "+budShort(c.cash)+" · 현물 "+budShort(c.inkind) : "부담 없음"}
@@ -1661,6 +1696,7 @@ function budInit(){
   on("budCash","change",     function(e){ BUD.cash = budNum(e.target.value); budSave(); budRender(); });
   on("budIndirect","change", function(e){ BUD.indirect = budNum(e.target.value); budSave(); budRender(); });
   on("budMonths","change",   function(e){ BUD.months = Math.max(1, Math.round(budNum(e.target.value)) || 12); budSave(); budRender(); });
+  on("budUnitRound","change",function(e){ BUD.unit = Math.max(1, budNum(e.target.value) || 1); budSave(); budRender(); });
   on("budAvgPay","change",   function(e){ BUD.avgPay = budNum(e.target.value); budSave(); budRender(); });
   on("budSecure","change",   function(e){ BUD.secure = e.target.checked; budSave(); budRender(); });
   on("budResetBtn","click",  function(){ BUD = budDefault(BUD.proj, BUD.agency); budSave(); budRender(); toast("기본값으로 되돌렸어요."); });
