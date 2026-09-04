@@ -78,7 +78,9 @@
   .pcard.total.active{box-shadow:0 0 0 3px rgba(124,58,237,.28),var(--shadow)}
   .pcard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
   .pcard-name{font-weight:700;font-size:14px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;display:flex;align-items:center}
-  .pcard-badge{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--muted);background:#f2f3f6;border-radius:20px;padding:2px 8px}
+  .pcard-badge{font-size:10.5px;font-weight:800;letter-spacing:.2px;color:var(--ink2);background:#e9ebf0;border-radius:20px;padding:2.5px 9px;white-space:nowrap}
+  .pcard-badge.own-goun{background:#ccfbf1;color:#0f766e}
+  .pcard-badge.own-hyerim{background:#f3e8ff;color:#7e22ce}
   .pcard-label{font-size:10.5px;letter-spacing:.7px;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
   .pcard-big{font-size:26px;font-weight:800;letter-spacing:-.5px}
   .pcard-big .unit{font-size:13px;font-weight:600;margin-left:2px;color:var(--sub)}
@@ -88,7 +90,7 @@
   .pcard.total .pcard-foot{border-top-color:rgba(255,255,255,.18)}
   .pcard-foot .fx{display:inline-flex;align-items:center;gap:5px}
   .pd{width:7px;height:7px;border-radius:50%;display:inline-block}
-  .pd.red{background:var(--red)} .pd.amber{background:var(--amber)} .pd.green{background:var(--green)}
+  .pd.red{background:var(--red)} .pd.amber{background:#f59e0b} .pd.green{background:var(--green)}
   .hint{color:var(--muted);font-size:11.5px;margin:2px 2px 18px}
 
   /* ===== panel ===== */
@@ -138,11 +140,11 @@
   .chipdot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:7px;vertical-align:baseline}
   .pcarddot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px;flex:0 0 8px}
   .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px}
-  .badge.red{color:var(--red);background:var(--red-soft)} .badge.amber{color:var(--amber);background:var(--amber-soft)}
+  .badge.red{color:#fff;background:var(--red)} .badge.amber{color:#92400e;background:#fde68a}
   .badge.green{color:var(--green);background:var(--green-soft)}
   .mineb{display:inline-block;font-size:9.5px;font-weight:800;color:var(--accent-d);background:var(--accent-soft);
     border-radius:6px;padding:2px 6px 1px;margin-left:6px;vertical-align:middle}
-  .pcard-badge.mine{background:var(--accent-soft);color:var(--accent-d)}
+  .pcard-badge.mine{background:var(--accent-d);color:#fff}
   .ejrow.lockedrow{opacity:.55}
   .ejrow.lockedrow .rateinp,.ejrow.lockedrow .moninp{background:#f3f4f6;cursor:not-allowed}
   .lockb{margin-left:8px;font-size:10.5px;font-weight:700;color:var(--sub);background:#f1f2f5;border-radius:6px;padding:3px 8px}
@@ -580,9 +582,9 @@ function bandOf(v){
 const BAND_CLS = {over:"red", full:"red", warn:"amber", room:"green"};
 const BAND_TXT = {over:"over", full:"over", warn:"full", room:""};
 function cellColor(v){
-  if(v>100.0001)      return {bg:"#fecaca",fg:"#991b1b"};
-  if(v>=BAND_FULL)    return {bg:"#fee2e2",fg:"#b91c1c"};
-  if(v>=BAND_WARN)    return {bg:"#fef3c7",fg:"#92400e"};
+  if(v>100.0001)      return {bg:"#dc2626",fg:"#fff"};
+  if(v>=BAND_FULL)    return {bg:"#fecaca",fg:"#991b1b"};
+  if(v>=BAND_WARN)    return {bg:"#fde68a",fg:"#92400e"};
   if(v>0)        return {bg:"#dcfce7",fg:"#166534"};
   return {bg:"#f3f4f6",fg:"#9ca3af"};
 }
@@ -621,7 +623,7 @@ function renderProjectCards(){
     +`<div class="pcard-label">총 인원</div><div class="pcard-big">${NAMES.length}<span class="unit">명</span></div>`
     +`<div class="pcard-foot"><span class="fx"><i class="pd red"></i>100%↑ ${full+over}</span><span class="fx"><i class="pd amber"></i>90%대 ${warn}</span></div></div>`;
   for(const pj of PROJECTS){ const s=st[pj.name];
-    h+=`<div class="pcard ${projectFilters.includes(pj.name)?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name"><i class="pcarddot" style="background:${projColor(pj.name).fg}"></i>${pj.name}</span>${canEdit(pj.name)?'<span class="pcard-badge mine">내 담당</span>':`<span class="pcard-badge">${ownerName(pj.name)}</span>`}</div>`
+    h+=`<div class="pcard ${projectFilters.includes(pj.name)?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name"><i class="pcarddot" style="background:${projColor(pj.name).fg}"></i>${pj.name}</span>${canEdit(pj.name)?'<span class="pcard-badge mine">내 담당</span>':`<span class="pcard-badge own-${pj.own||'none'}">${ownerName(pj.name)}</span>`}</div>`
       +`<div class="pcard-label">참여 인원</div><div class="pcard-big">${s.cnt}<span class="unit">명</span></div>`
       +`<div class="pcard-foot"><span>평균 ${s.avg}%</span><span class="fx">신규 ${s.nw}명</span></div></div>`;
   }
@@ -800,7 +802,7 @@ function renderList(){
     const pk=r.mx, rem=r1(100-pk);
     const bd = bandOf(pk);
     const badge = `<span class="badge ${BAND_CLS[bd]}">${bd==="over"?"초과":bd==="full"?"100%":bd==="warn"?"90%대":"여유"}</span>`;
-    const barc = bd==="over"||bd==="full"?"var(--red)":(bd==="warn"?"var(--amber)":"var(--green)");
+    const barc = bd==="over"||bd==="full"?"var(--red)":(bd==="warn"?"#f59e0b":"var(--green)");
     const pjs=[...new Set(INDEX[r.n].map(x=>x.project))];
     h+=`<tr data-n="${r.n}" class="${isRetired(r.n)?'retiredrow':''}"><td><b>${r.n}</b>${isRetired(r.n)?' <span class="quitbadge">퇴사</span>':''}${isNewIn(r.n)&&!isRetired(r.n)?' <span class="newbadge">NEW</span>':''}<div class="teamsub">${teamOf(r.n)||"—"}</div></td><td>${chipsHtml(pjs)}</td>`
       +`<td class="r ${BAND_TXT[bd]}">${pk}%</td>`
