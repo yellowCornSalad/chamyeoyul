@@ -421,6 +421,74 @@
   .dtbl th.n,.dtbl td.n{text-align:right}
   .dtbl td{padding:6px 10px;border-bottom:1px solid var(--line2)}
   .dtbl tr.dsum td{background:#fbfbfd;font-weight:800;border-bottom:none}
+  /* ===== 과제 예산 ===== */
+  .seg{display:inline-flex;background:#eef0f3;border-radius:10px;padding:3px;gap:2px}
+  .seg button{border:none;background:transparent;color:var(--sub);font-family:inherit;font-size:12.5px;
+    font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .seg button.on{background:#fff;color:var(--accent-d);box-shadow:0 1px 2px rgba(16,24,40,.08)}
+  .fundsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:0 16px 14px}
+  .fsum{border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:#fff}
+  .fsum.hi{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-d) 100%);border-color:transparent}
+  .fsum .k{font-size:11px;font-weight:700;color:var(--sub)}
+  .fsum.hi .k{color:rgba(255,255,255,.78)}
+  .fsum .v{font-size:20px;font-weight:800;color:var(--ink);margin-top:5px;letter-spacing:-.02em}
+  .fsum.hi .v{color:#fff}
+  .fsum .s{font-size:11px;font-weight:600;color:var(--muted);margin-top:3px}
+  .fsum.hi .s{color:rgba(255,255,255,.8)}
+  .fundgrid{display:grid;grid-template-columns:250px 1fr;gap:16px;padding:0 16px 8px;align-items:start}
+  .fundlist{display:flex;flex-direction:column;gap:6px;position:sticky;top:14px;max-height:calc(100vh - 40px);overflow:auto;padding-right:2px}
+  .fundlist::-webkit-scrollbar{width:7px}
+  .fundlist::-webkit-scrollbar-thumb{background:#e2e4ea;border-radius:8px}
+  .fitem{text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;
+    cursor:pointer;font-family:inherit;transition:.12s}
+  .fitem:hover{border-color:#d5d8e0;background:#fbfbfd}
+  .fitem.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+  .fitem.off{opacity:.6}
+  .fitem .ftop{display:flex;align-items:center;gap:6px}
+  .fdot{width:7px;height:7px;border-radius:50%;flex:none}
+  .fname{font-size:12.5px;font-weight:800;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fcnt{font-size:10.5px;font-weight:800;color:var(--sub);background:#eef0f3;border-radius:20px;padding:1px 7px}
+  .fend{font-size:10px;font-weight:800;color:var(--amber);background:var(--amber-soft);border-radius:5px;padding:1px 5px}
+  .fend.done{color:var(--red);background:var(--red-soft)}
+  .fag{font-size:10.5px;font-weight:700;color:var(--muted);margin:3px 0 0 13px}
+  .fitem.all .fmoney{margin-left:0}
+  .fmoney{font-size:11.5px;font-weight:600;color:var(--sub);margin:6px 0 5px}
+  .fmoney b{font-size:13px;font-weight:800;color:var(--ink)}
+  .fmoney.dim{color:var(--muted)}
+  .fpct{float:right;font-weight:800;color:var(--muted)}
+  .fbar{height:4px;border-radius:99px;background:#eef0f3;overflow:hidden}
+  .fbar>span{display:block;height:100%;border-radius:99px}
+  .fundmain{min-width:0}
+  .fundmain .subpanel{background:transparent;border:none;box-shadow:none;padding:0}
+  .fundmain .subpanel .panelhead{padding:0 0 12px}
+  .fundmain .subpanel .panelhead h2{font-size:14px}
+  .fundmain .budnote,.fundmain .budgrid,.fundmain .budcards,.fundmain .budwarn,
+  .fundmain .budsec,.fundmain .budlink,.fundmain .budlaw,.fundmain .budimp{margin-left:0;margin-right:0;padding-left:0;padding-right:0}
+  .fundmain .recbar,.fundmain .recwrap,.fundmain .recacts,.fundmain .recfoot,.fundmain .recpend{padding-left:0;padding-right:0}
+  .fundmain .recpend{margin-left:0;margin-right:0}
+  .fhead{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:6px}
+  .fhead h3{margin:0;font-size:16px;font-weight:800;letter-spacing:-.02em}
+  .fbiz{font-size:12px;color:var(--sub);font-weight:600;margin-top:3px;max-width:520px}
+  .fmeta{text-align:right;flex:none}
+  .fperiod{font-size:12px;color:var(--sub);font-weight:600;margin-bottom:14px}
+  .fperiod .over{color:var(--red)}
+  .dtbl.big{font-size:13px}
+  .dtbl.big th{padding:9px 12px}
+  .dtbl.big td{padding:9px 12px}
+  .dtbl.big tr.prow{cursor:pointer}
+  .dtbl.big tr.prow:hover{background:var(--accent-soft)}
+  @media (max-width:900px){ .fundgrid{grid-template-columns:1fr} .fundlist{position:static;max-height:none;
+    flex-direction:row;overflow-x:auto;padding-bottom:6px} .fitem{min-width:180px;flex:none} }
+  .tscroll{overflow-x:auto;border-radius:10px}
+  .tscroll::-webkit-scrollbar{height:8px}
+  .tscroll::-webkit-scrollbar-thumb{background:#e2e4ea;border-radius:8px}
+  .dtbl.big{min-width:640px}
+  .alltbl .pcell{min-width:210px}
+  .pline{display:flex;align-items:center;gap:7px}
+  .pline b{font-size:13px;white-space:nowrap}
+  .ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+  .alltbl .recper{white-space:nowrap;font-size:11.5px}
+  .fundgrid{grid-template-columns:230px minmax(0,1fr)}
 </style>
 </head>
 <body>
@@ -442,8 +510,7 @@
       <nav class="nav">
         <button class="navitem active" id="navHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>전체 현황</button>
         <button class="navitem" id="navCand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>투입 후보</button>
-        <button class="navitem" id="navRec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-4 10.5V17h8v-3.5A6 6 0 0 0 12 3z"/><path d="M10 21h4"/><path d="M10 19h4"/></svg>집행 추천</button>
-        <button class="navitem" id="navBudget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M8 6h8"/><path d="M8 11h.01"/><path d="M12 11h.01"/><path d="M16 11h.01"/><path d="M8 15h.01"/><path d="M12 15h.01"/><path d="M16 15v4"/><path d="M8 19h4"/></svg>예산 계산기</button>
+        <button class="navitem" id="navFund"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><rect x="4" y="11" width="4" height="7" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="16" y="9" width="4" height="9" rx="1"/></svg>과제 예산</button>
         <button class="navitem" id="navXlsx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M4 21h16"/></svg>엑셀 추출</button>
       </nav>
       <div class="sidefoot">
@@ -488,6 +555,23 @@
         </div>
         <div class="pills" id="pills"></div>
         <div id="out"></div>
+      </section>
+      <section class="panel" id="fundView" style="display:none">
+        <div class="panelhead">
+          <div><h2>과제 예산</h2><div class="panelsub" id="fundSub"></div></div>
+          <div class="headctl">
+            <div class="seg" id="fundSeg">
+              <button data-seg="exec" class="on">집행 현황</button>
+              <button data-seg="rec">집행 추천</button>
+              <button data-seg="calc">편성 계산기</button>
+            </div>
+          </div>
+        </div>
+        <div class="fundsum" id="fundSum"></div>
+        <div class="fundgrid">
+          <aside class="fundlist" id="fundList"></aside>
+          <div class="fundmain" id="fundMain"><div id="fundExec"></div></div>
+        </div>
       </section>
       <section class="panel budpanel" id="budgetView" style="display:none">
         <div class="panelhead">
@@ -926,31 +1010,20 @@ function renderCandList(){
 function render(){
   if(!PROJECTS) return;
   toggleClear();
-  const rec = view==="rec";
-  const rv = document.getElementById("recView"); if(rv) rv.style.display = rec?"":"none";
-  document.getElementById("navRec").classList.toggle("active", rec);
-  const bud = view==="budget";
-  const bv = document.getElementById("budgetView"); if(bv) bv.style.display = bud?"":"none";
+  const fund = view==="fund" || view==="rec" || view==="budget";   /* 옛 상태도 흡수 */
+  if(fund) view = "fund";
+  const fv = document.getElementById("fundView"); if(fv) fv.style.display = fund?"":"none";
+  document.getElementById("navFund").classList.toggle("active", fund);
   const hp = document.getElementById("histPanel"), lp = document.getElementById("listPanel");
-  document.getElementById("navBudget").classList.toggle("active", bud);
-  const psb=document.getElementById("pageSub"); if(psb) psb.textContent = bud ? "국가연구개발혁신법 기준으로 과제 예산을 비목별로 편성하고 한도를 검증합니다." : "인원별 국가과제 참여율과 잔여 여력(추가 가능 %)을 확인합니다. 최대 100%.";
-  if(rec){
-    if(budHistPrev===null && hp) budHistPrev = hp.style.display;
-    ["projCards","hintline","newProjBox"].forEach(function(id){ const e=document.getElementById(id); if(e) e.style.display="none"; });
-    if(hp) hp.style.display="none"; if(lp) lp.style.display="none";
-    const bv2=document.getElementById("budgetView"); if(bv2) bv2.style.display="none";
-    document.getElementById("navHome").classList.remove("active");
-    document.getElementById("navCand").classList.remove("active");
-    document.getElementById("navBudget").classList.remove("active");
-    recRender(); return;
-  }
-  if(bud){
+  const psb=document.getElementById("pageSub"); if(psb) psb.textContent = fund ? "과제별 예산 집행 현황과 남은 예산, 계상할 비목까지 한 화면에서 봅니다." : "인원별 국가과제 참여율과 잔여 여력(추가 가능 %)을 확인합니다. 최대 100%.";
+  if(fund){
     if(budHistPrev===null && hp) budHistPrev = hp.style.display;
     ["projCards","hintline","newProjBox"].forEach(function(id){ const e=document.getElementById(id); if(e) e.style.display="none"; });
     if(hp) hp.style.display="none"; if(lp) lp.style.display="none";
     document.getElementById("navHome").classList.remove("active");
     document.getElementById("navCand").classList.remove("active");
-    budRender(); return;
+    if(DS) fundRender();
+    return;
   }
   if(lp) lp.style.display="";
   if(hp && budHistPrev!==null){ hp.style.display = budHistPrev; budHistPrev = null; }
@@ -1795,10 +1868,9 @@ function budInit(){
   on("budXlsxBtn","click",   budXlsx);
   budImpInit();
   recInit();
-  recLoad();
-  const nb = document.getElementById("navBudget");
-  if(nb) nb.addEventListener("click", function(){
-    restoreIfEditing(); view = "budget"; selected = null; pushView(); render(); window.scrollTo(0,0); });
+  fundInit();
+  recLoad().then(function(){ if(view==="fund") fundRender(); });
+  /* 진입은 navFund(과제 예산) 한 곳에서만 — fundInit 참조 */
 }
 
 
@@ -2432,10 +2504,165 @@ function recInit(){
     $("recProjBtn").textContent = open ? "예산·집행 현황" : "현황 닫기";
     if(!open){ box.innerHTML = recProjTable(); recBindProj(); }
   });
-  const nb = $("navRec");
+  /* 진입은 navFund(과제 예산) 한 곳에서만 — fundInit 참조 */
+}
+
+
+/* ===== 과제 예산 (집행 현황 · 집행 추천 · 편성 계산기 한 화면) ===== */
+let FUNDSEL = "", FUNDSEG = "exec";
+
+function fundTot(p){
+  const t = {b:0,u:0,pd:0,l:0};
+  (p.rows||[]).forEach(r=>{ t.b+=r.budget; t.u+=r.used; t.pd+=r.pend; t.l+=r.left; });
+  return t;
+}
+const FUND_AGCOLOR = {
+  "IITP":"#6366f1", "KISA":"#0ea5e9", "NIPA":"#14b8a6",
+  "국방기술진흥연구소":"#a855f7", "산업통상자원부":"#f59e0b", "ETRI":"#ec4899"
+};
+function fundColor(a){ return FUND_AGCOLOR[a] || "#94a3b8"; }
+function fundRate(pct){
+  return pct>=95 ? "var(--red)" : (pct>=70 ? "#f59e0b" : "var(--green)");
+}
+function fundRenderSum(){
+  const G = {b:0,u:0,pd:0,l:0};
+  let live = 0;
+  DS.projects.forEach(p=>{
+    const t = fundTot(p); G.b+=t.b; G.u+=t.u; G.pd+=t.pd; G.l+=t.l;
+    if((p.rows||[]).length) live++;
+  });
+  const pct = G.b ? G.u/G.b*100 : 0;
+  document.getElementById("fundSum").innerHTML = [
+    {hi:1, k:"2026 총예산", v:budShort(G.b)+"원", s:live+"개 과제 집행 중"},
+    {k:"집행", v:budShort(G.u)+"원", s:r1(pct)+"% 소진"},
+    {k:"발의", v:budShort(G.pd)+"원", s:G.pd?"결재 진행분":"없음"},
+    {k:"잔여", v:budShort(G.l)+"원", s:"쓸 수 있는 금액"}
+  ].map(x=>'<div class="fsum'+(x.hi?" hi":"")+'"><div class="k">'+x.k+'</div>'
+    +'<div class="v">'+x.v+'</div><div class="s">'+x.s+'</div></div>').join("");
+}
+function fundRenderList(){
+  const host = document.getElementById("fundList");
+  const G = DS.projects.reduce((a,p)=>{ const t=fundTot(p); a.b+=t.b; a.u+=t.u; a.l+=t.l; return a; }, {b:0,u:0,l:0});
+  let h = '<button class="fitem all'+(FUNDSEL===""?" on":"")+'" data-fp="">'
+    + '<div class="ftop"><span class="fname">전체 과제</span><span class="fcnt">'+DS.projects.length+'</span></div>'
+    + '<div class="fmoney">잔여 <b>'+budShort(G.l)+'</b>원</div>'
+    + '<div class="fbar"><span style="width:'+(G.b?G.u/G.b*100:0)+'%;background:'+fundRate(G.b?G.u/G.b*100:0)+'"></span></div>'
+    + '</button>';
+  const arr = DS.projects.slice().sort((a,b)=>{
+    const ab=(a.rows||[]).length?0:1, bb=(b.rows||[]).length?0:1;
+    if(ab!==bb) return ab-bb;
+    return fundTot(b).l - fundTot(a).l;
+  });
+  arr.forEach(p=>{
+    const t = fundTot(p), has = (p.rows||[]).length>0;
+    const pct = t.b ? t.u/t.b*100 : 0, days = recDaysLeft(p);
+    h += '<button class="fitem'+(FUNDSEL===p.name?" on":"")+(has?"":" off")+'" data-fp="'+budEsc(p.name)+'">'
+      + '<div class="ftop"><span class="fdot" style="background:'+fundColor(p.agency)+'"></span>'
+      + '<span class="fname">'+budEsc(p.name)+'</span>'
+      + (days>=0&&days<=60?'<span class="fend">D-'+days+'</span>':(days<0?'<span class="fend done">종료</span>':''))
+      + '</div>'
+      + '<div class="fag">'+budEsc(p.agency)+'</div>'
+      + (has
+         ? '<div class="fmoney">잔여 <b>'+budShort(t.l)+'</b>원 <span class="fpct">'+r1(pct)+'%</span></div>'
+           + '<div class="fbar"><span style="width:'+pct+'%;background:'+fundRate(pct)+'"></span></div>'
+         : '<div class="fmoney dim">예산 미확정</div>')
+      + '</button>';
+  });
+  host.innerHTML = h;
+  host.querySelectorAll("[data-fp]").forEach(b=> b.onclick = ()=>{
+    FUNDSEL = b.dataset.fp;
+    if(FUNDSEG === "calc" && FUNDSEL){ BUD.proj = FUNDSEL; budSave(); }
+    fundRender();
+  });
+}
+function fundExecHtml(){
+  if(FUNDSEL){
+    const p = DS.projects.find(x=>x.name===FUNDSEL);
+    if(!p) return "";
+    const t = fundTot(p), has = (p.rows||[]).length>0, days = recDaysLeft(p);
+    let h = '<div class="fhead"><div><h3>'+budEsc(p.name)+'</h3>'
+      + '<div class="fbiz">'+budEsc(p.biz)+'</div></div>'
+      + '<div class="fmeta"><span class="recag" style="background:'+fundColor(p.agency)+'22;color:'+fundColor(p.agency)+'">'
+      + budEsc(p.agency)+'</span><div class="recsub">'+budEsc(p.dept)+'</div></div></div>';
+    h += '<div class="fperiod">'+p.from.replace(/-/g,".")+' ~ '+p.to.replace(/-/g,".")
+      + (days<0?' · <b class="over">종료</b>':(days<=60?' · <b class="over">'+days+'일 남음</b>':''))
+      + (p.note?' · '+budEsc(p.note):'')+'</div>';
+    if(!has) return h + '<div class="empty">아직 예산이 확정되지 않았어요. 2026년 예정액 '+budWon(p.y2026)+'원.</div>';
+    const pct = t.b ? t.u/t.b*100 : 0;
+    h += '<div class="tscroll"><table class="dtbl big"><thead><tr><th>비목</th><th>세목</th><th class="n">총예산</th>'
+      + '<th class="n">집행</th><th class="n">발의</th><th class="n">잔여</th><th style="width:110px">집행률</th></tr></thead><tbody>';
+    p.rows.forEach(r=>{
+      const rp = r.budget ? r.used/r.budget*100 : 0;
+      h += '<tr><td>'+budEsc(r.bm)+'</td><td><b>'+budEsc(r.sm)+'</b></td>'
+        + '<td class="n">'+budWon(r.budget)+'</td><td class="n">'+budWon(r.used)+'</td>'
+        + '<td class="n">'+(r.pend?budWon(r.pend):'<span class="recdim">-</span>')+'</td>'
+        + '<td class="n"><b>'+budWon(r.left)+'</b></td>'
+        + '<td>'+(r.budget?'<div class="recbar2"><span style="width:'+Math.min(100,rp)+'%;background:'+fundRate(rp)+'"></span></div>'
+                 +'<div class="recpct">'+r1(rp)+'%</div>':'<span class="recdim">-</span>')+'</td></tr>';
+    });
+    h += '<tr class="dsum"><td colspan="2">합계</td><td class="n">'+budWon(t.b)+'</td><td class="n">'+budWon(t.u)
+      + '</td><td class="n">'+budWon(t.pd)+'</td><td class="n">'+budWon(t.l)+'</td><td class="n">'+r1(pct)+'%</td></tr>';
+    return h + '</tbody></table></div>';
+  }
+  /* 전체 보기 */
+  let h = '<div class="tscroll"><table class="dtbl big alltbl"><thead><tr><th>과제</th><th>기간</th>'
+    + '<th class="n">총예산</th><th class="n">집행</th><th class="n">잔여</th><th style="width:104px">집행률</th></tr></thead><tbody>';
+  DS.projects.forEach(p=>{
+    const t = fundTot(p), has = (p.rows||[]).length>0, days = recDaysLeft(p);
+    const pct = t.b ? t.u/t.b*100 : 0;
+    h += '<tr class="prow" data-fp2="'+budEsc(p.name)+'">'
+      + '<td class="pcell"><div class="pline"><b>'+budEsc(p.name)+'</b>'
+      + '<span class="recag" style="background:'+fundColor(p.agency)+'22;color:'+fundColor(p.agency)+'">'+budEsc(p.agency)+'</span></div>'
+      + '<div class="recsub ell">'+budEsc(p.biz)+'</div></td>'
+      + '<td class="recper">'+p.from.replace(/-/g,".")+'<br>~ '+p.to.replace(/-/g,".")
+      + (days<0?'<div class="recwarn">종료</div>':(days<=60?'<div class="recwarn">D-'+days+'</div>':''))+'</td>'
+      + (has ? '<td class="n">'+budWon(t.b)+'</td><td class="n">'+budWon(t.u)+'</td><td class="n"><b>'+budWon(t.l)+'</b></td>'
+             + '<td><div class="recbar2"><span style="width:'+Math.min(100,pct)+'%;background:'+fundRate(pct)+'"></span></div>'
+             + '<div class="recpct">'+r1(pct)+'%</div></td>'
+             : '<td class="n" colspan="4"><span class="recdim">예산 미확정 · '+budWon(p.y2026)+'원 예정</span></td>')
+      + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div class="recfoot">'+budEsc(DS.asof)+' 기준 · 출처 「연구과제 예산현황v2_2026.xlsx」. 과제를 누르면 비목·세목별로 볼 수 있어요.</div>';
+  return h;
+}
+function fundRender(){
+  if(!DS) return;
+  fundRenderSum();
+  fundRenderList();
+  const seg = document.getElementById("fundSeg");
+  seg.querySelectorAll("[data-seg]").forEach(b=> b.classList.toggle("on", b.dataset.seg===FUNDSEG));
+  const ex = document.getElementById("fundExec"), rv = document.getElementById("recView"), bv = document.getElementById("budgetView");
+  ex.style.display = FUNDSEG==="exec" ? "" : "none";
+  rv.style.display = FUNDSEG==="rec"  ? "" : "none";
+  bv.style.display = FUNDSEG==="calc" ? "" : "none";
+  const sub = document.getElementById("fundSub");
+  sub.textContent = FUNDSEL
+    ? FUNDSEL + " · " + (FUNDSEG==="exec"?"비목별 집행 현황":FUNDSEG==="rec"?"이 과제 기준 추천":"예산 편성")
+    : "13개 과제의 집행 현황과 남은 예산, 그리고 어디에 계상할지까지 한 화면에서.";
+  if(FUNDSEG==="exec"){
+    ex.innerHTML = fundExecHtml();
+    ex.querySelectorAll("[data-fp2]").forEach(tr=> tr.onclick = ()=>{ FUNDSEL = tr.dataset.fp2; fundRender(); });
+  } else if(FUNDSEG==="rec"){
+    recRender();
+  } else {
+    if(FUNDSEL && BUD && BUD.proj !== FUNDSEL){ BUD.proj = FUNDSEL; budSave(); }
+    budRender();
+  }
+}
+function fundInit(){
+  const seg = document.getElementById("fundSeg");
+  if(!seg) return;
+  seg.querySelectorAll("[data-seg]").forEach(b=> b.onclick = ()=>{ FUNDSEG = b.dataset.seg; fundRender(); });
+  const main = document.getElementById("fundMain");
+  const rv = document.getElementById("recView"), bv = document.getElementById("budgetView");
+  if(rv){ rv.classList.remove("panel"); rv.classList.add("subpanel"); main.appendChild(rv); }
+  if(bv){ bv.classList.remove("panel"); bv.classList.add("subpanel"); main.appendChild(bv); }
+  const nb = document.getElementById("navFund");
   if(nb) nb.addEventListener("click", async ()=>{
-    restoreIfEditing(); view = "rec"; selected = null; pushView(); render(); window.scrollTo(0,0);
-    if(!DS){ await recLoad(); recRender(); }
+    restoreIfEditing(); view = "fund"; selected = null; pushView(); render(); window.scrollTo(0,0);
+    if(!DS){ await recLoad(); }
+    fundRender();
   });
 }
 
