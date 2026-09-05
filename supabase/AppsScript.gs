@@ -13,6 +13,9 @@
  */
 
 var FN_URL = "https://pkencmbryzgtnwrxlksz.supabase.co/functions/v1/sync-budget";
+/* Edge Function 이 JWT 검증을 켜둔 상태라 공개 anon 키를 같이 보낸다.
+   이 키는 웹페이지에도 박혀 있는 공개 값이고, 실제 인가는 x-sync-token 이 한다. */
+var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZW5jbWJyeXpndG53cnhsa3N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDYyOTIsImV4cCI6MjA5NDkyMjI5Mn0.Jx8qCUlVgGLDzKiscMetgEGjZ4FSs2ptTixvaUO7IvA";
 
 /* 예산 행으로 인정하는 비목 (그 아래 단가/회 상세표를 걸러내기 위함) */
 var VALID_BM = ["직접비","간접비","인건비","운영비","여비","업무추진비","현물",
@@ -113,7 +116,7 @@ function syncNow(){
   var res = UrlFetchApp.fetch(FN_URL, {
     method: "post",
     contentType: "application/json",
-    headers: { "x-sync-token": token },
+    headers: { "x-sync-token": token, "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
     payload: JSON.stringify(payload),
     muteHttpExceptions: true
   });
