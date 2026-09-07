@@ -168,8 +168,29 @@ Deno.serve(async (req) => {
   });
   if (!res.ok) return json({ error: "db", detail: await res.text() }, 500);
   const inserted = await res.json();
+
+  /* 오래된 스냅샷 정리 — 페이지는 최신 1건만 읽는다.
+     주기 동기화라 그냥 두면 무료 용량(500MB)을 계속 갉아먹는다. */
+  const KEEP = 50;
+  let pruned = 0;
+  try {
+    const h = { apikey: svc, Authorization: `Bearer ${svc}` };
+    const q = await fetch(
+      `${url}/rest/v1/budget_snapshots?select=created_at&order=created_at.desc&limit=1&offset=${KEEP}`,
+      { headers: h });
+    if (q.ok) {
+      const old = await q.json();
+      const cut = old[0]?.created_at;
+      if (cut) {
+        const d = await fetch(
+          `${url}/rest/v1/budget_snapshots?created_at=lt.${encodeURIComponent(cut)}`,
+          { method: "DELETE", headers: { ...h, Prefer: "return=representation" } });
+        if (d.ok) pruned = (await d.json()).length;
+      }
+    }
+  } catch { /* 정리 실패가 동기화를 막지는 않게 */ }
   return json({
-    ok: true, id: inserted[0]?.id, asof: ds.asof, sheetPw: pwNote,
+    ok: true, id: inserted[0]?.id, asof: ds.asof, sheetPw: pwNote, pruned,
     projects: projects.length, withBudget: projects.filter((p) => p.rows.length).length,
     history: history.length, bytes: plain.length,
   });

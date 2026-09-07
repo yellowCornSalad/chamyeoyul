@@ -5,11 +5,12 @@
  * 스크립트가 주기적으로 원본을 읽어 웹에 반영한다.
  *   - .xlsx 는 Apps Script 가 직접 못 읽으므로, 매번 임시 구글시트로 변환해 읽고 바로 버린다.
  *   - 원본 수정시각이 그대로면 변환도 전송도 하지 않는다(불필요한 호출 방지).
+ *   - 평일(주말·공휴일 제외) 09·12·15·18·21시에만 확인한다.
  *
  * 설치
  *  1) 왼쪽 「서비스 +」 → Drive API 추가 (식별자 Drive, 버전 v3)
  *  2) 톱니(프로젝트 설정) → 스크립트 속성에  SYNC_TOKEN = (준호에게 받은 토큰)
- *  3) 함수 목록에서 setupTriggers 선택 → 실행 → 권한 승인
+ *  3) 함수 목록에서 setupTriggers 선택 → 실행 → 권한 승인 (공휴일 확인용 캘린더 포함)
  *  4) 확인은 syncNow 실행 후 실행 로그 보기
  */
 
@@ -26,6 +27,10 @@ var VALID_BM = ["직접비","간접비","인건비","운영비","여비","업무
                 "위탁연구개발비","연구활동비","연구재료비"];
 var SKIP_SHEETS = ["총괄","2026","2025","사용내역","민간부담금 납부 내역"];
 var TARGET_YEAR = 2026;
+
+/* 동기화 시각 — 평일 09·12·15·18·21시 (한국시간). 주말·공휴일은 건너뛴다. */
+var TZ = "Asia/Seoul";
+var HOLIDAY_CAL = "ko.south_korea#holiday@group.v.calendar.google.com";
 
 function num_(v){
   if (v === null || v === undefined || v === "") return 0;
@@ -159,15 +164,47 @@ function sync_(force){
 /** 수동 실행용 — 변경 여부와 관계없이 무조건 보낸다 */
 function syncNow(){ return sync_(true); }
 
-/** 트리거용 — 원본이 바뀌었을 때만 보낸다 */
-function tick(){ return sync_(false); }
+/** 지금이 동기화할 시간인가. 건너뛸 이유가 있으면 그 이유를 돌려준다. */
+function skipReason_(){
+  var now = new Date();
+  var day = Number(Utilities.formatDate(now, TZ, "u"));   // 1=월 … 7=일
+  if (day >= 6) return "주말";
+  var hh = Number(Utilities.formatDate(now, TZ, "H"));
+  if (hh < 9 || hh > 21) return "업무시간 외 (" + hh + "시)";
+  if (isHoliday_(now)) return "공휴일";
+  return "";
+}
+function isHoliday_(d){
+  try {
+    var cal = CalendarApp.getCalendarById(HOLIDAY_CAL);
+    return cal ? cal.getEventsForDay(d).length > 0 : false;
+  } catch (e) {
+    return false;              // 달력 권한이 없으면 공휴일 검사만 건너뛴다
+  }
+}
+
+/** 트리거용 — 업무시간에만, 원본이 바뀌었을 때만 보낸다 */
+function tick(){
+  var why = skipReason_();
+  if (why){ Logger.log("건너뜀: " + why); return "건너뜀 (" + why + ")"; }
+  return sync_(false);
+}
+
+/** 아침 첫 회차 — 변경 여부와 무관하게 한 번 전체 갱신(안전망) */
+function morningFull(){
+  var why = skipReason_();
+  if (why){ Logger.log("건너뜀: " + why); return "건너뜀 (" + why + ")"; }
+  return sync_(true);
+}
 
 function setupTriggers(){
   ScriptApp.getProjectTriggers().forEach(function(t){ ScriptApp.deleteTrigger(t); });
-  ScriptApp.newTrigger("tick").timeBased().everyMinutes(10).create();      // 변경 감지
-  ScriptApp.newTrigger("syncNow").timeBased().everyHours(6).create();      // 안전망
+  ScriptApp.newTrigger("morningFull").timeBased().atHour(9).everyDays(1).inTimezone(TZ).create();
+  [12, 15, 18, 21].forEach(function(h){
+    ScriptApp.newTrigger("tick").timeBased().atHour(h).everyDays(1).inTimezone(TZ).create();
+  });
   syncNow();
-  return "트리거 설치 완료 · 첫 동기화까지 마쳤습니다.";
+  return "트리거 설치 완료 (평일 09·12·15·18·21시) · 첫 동기화까지 마쳤습니다.";
 }
 
 /** 설치 확인용 */
@@ -180,4 +217,5 @@ function checkSetup(){
   Logger.log("트리거: " + ScriptApp.getProjectTriggers().map(function(t){
     return t.getHandlerFunction();
   }).join(", "));
+  Logger.log("지금 동기화 가능? " + (skipReason_() || "예"));
 }
