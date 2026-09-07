@@ -1,16 +1,20 @@
 /**
  * 연구과제 예산현황 시트 → 참여율 관리 웹 동기화
  *
- * 설치
- *  1) 시트에서  확장 프로그램 → Apps Script
- *  2) 이 파일 내용을 통째로 붙여넣고 저장
- *  3) 왼쪽 톱니(프로젝트 설정) → 스크립트 속성 → 속성 추가
- *       SYNC_TOKEN = (준호에게 받은 토큰)
- *  4) 위 함수 목록에서 setupTriggers 선택 → 실행 (최초 1회 권한 승인)
- *  5) 확인은 syncNow 실행 후 실행 로그 보기
+ * 원본은 드라이브에 있는 기존 .xlsx 파일 그대로 둔다(팀 권한 손댈 필요 없음).
+ * 스크립트가 주기적으로 원본을 읽어 웹에 반영한다.
+ *   - .xlsx 는 Apps Script 가 직접 못 읽으므로, 매번 임시 구글시트로 변환해 읽고 바로 버린다.
+ *   - 원본 수정시각이 그대로면 변환도 전송도 하지 않는다(불필요한 호출 방지).
  *
- * 이후 시트를 고치면 1분 안에 웹에 반영된다.
+ * 설치
+ *  1) 왼쪽 「서비스 +」 → Drive API 추가 (식별자 Drive, 버전 v3)
+ *  2) 톱니(프로젝트 설정) → 스크립트 속성에  SYNC_TOKEN = (준호에게 받은 토큰)
+ *  3) 함수 목록에서 setupTriggers 선택 → 실행 → 권한 승인
+ *  4) 확인은 syncNow 실행 후 실행 로그 보기
  */
+
+/* 기존에 쓰던 원본 파일 (연구과제 예산현황v2_2026.xlsx) */
+var SRC_FILE_ID = "18jl7dagS5IF_hFHb0rzhoHIr6N7i_OSv";
 
 var FN_URL = "https://pkencmbryzgtnwrxlksz.supabase.co/functions/v1/sync-budget";
 /* Edge Function 이 JWT 검증을 켜둔 상태라 공개 anon 키를 같이 보낸다.
@@ -87,8 +91,7 @@ function readHistory_(ss){
   return out;
 }
 
-function buildPayload_(){
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+function buildPayload_(ss){
   var budgets = {}, catalog = {};
   ss.getSheets().forEach(function(sh){
     var nm = sh.getName();
@@ -106,13 +109,18 @@ function buildPayload_(){
   };
 }
 
-function syncNow(){
+/** 원본 .xlsx 를 임시 구글시트로 변환해 연다. 반환값은 {ss, tmpId} */
+function openSource_(){
+  var src = DriveApp.getFileById(SRC_FILE_ID);
+  var copy = Drive.Files.copy(
+    { name: "[임시-자동생성] " + src.getName(), mimeType: MimeType.GOOGLE_SHEETS },
+    SRC_FILE_ID);
+  return { ss: SpreadsheetApp.openById(copy.id), tmpId: copy.id, name: src.getName() };
+}
+
+function post_(payload){
   var token = PropertiesService.getScriptProperties().getProperty("SYNC_TOKEN");
   if (!token) throw new Error("스크립트 속성에 SYNC_TOKEN 을 먼저 넣어주세요.");
-  var payload = buildPayload_();
-  var nProj = Object.keys(payload.budgets).length;
-  if (!nProj) throw new Error("예산 행을 하나도 못 읽었습니다. 시트 구조를 확인해주세요.");
-
   var res = UrlFetchApp.fetch(FN_URL, {
     method: "post",
     contentType: "application/json",
@@ -123,27 +131,53 @@ function syncNow(){
   var code = res.getResponseCode(), body = res.getContentText();
   Logger.log("HTTP " + code + " " + body);
   if (code !== 200) throw new Error("동기화 실패 (" + code + "): " + body);
-  PropertiesService.getScriptProperties().setProperty("LAST_SYNC", new Date().toISOString());
   return body;
 }
 
-/* 편집이 잦을 때 매번 쏘지 않도록, 변경 표시만 남기고 1분 트리거가 실제 전송한다 */
-function onSheetChange(){
-  PropertiesService.getScriptProperties().setProperty("DIRTY", "1");
-}
-function tick(){
+/** 원본을 읽어 전송. force 가 아니면 원본이 안 바뀐 경우 건너뛴다. */
+function sync_(force){
   var props = PropertiesService.getScriptProperties();
-  if (props.getProperty("DIRTY") !== "1") return;
-  props.deleteProperty("DIRTY");
-  syncNow();
+  var mtime = DriveApp.getFileById(SRC_FILE_ID).getLastUpdated().toISOString();
+  if (!force && props.getProperty("SRC_MTIME") === mtime){
+    Logger.log("원본 변경 없음 (" + mtime + ") — 건너뜀");
+    return "변경 없음";
+  }
+  var src = openSource_();
+  try {
+    var payload = buildPayload_(src.ss);
+    if (!Object.keys(payload.budgets).length)
+      throw new Error("예산 행을 하나도 못 읽었습니다. 원본 시트 구조를 확인해주세요.");
+    var body = post_(payload);
+    props.setProperty("SRC_MTIME", mtime);
+    props.setProperty("LAST_SYNC", new Date().toISOString());
+    return body;
+  } finally {
+    try { DriveApp.getFileById(src.tmpId).setTrashed(true); } catch (e) {}   // 임시본은 반드시 정리
+  }
 }
+
+/** 수동 실행용 — 변경 여부와 관계없이 무조건 보낸다 */
+function syncNow(){ return sync_(true); }
+
+/** 트리거용 — 원본이 바뀌었을 때만 보낸다 */
+function tick(){ return sync_(false); }
 
 function setupTriggers(){
   ScriptApp.getProjectTriggers().forEach(function(t){ ScriptApp.deleteTrigger(t); });
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  ScriptApp.newTrigger("onSheetChange").forSpreadsheet(ss).onChange().create();
-  ScriptApp.newTrigger("tick").timeBased().everyMinutes(1).create();
-  ScriptApp.newTrigger("syncNow").timeBased().everyHours(6).create();   // 안전망
+  ScriptApp.newTrigger("tick").timeBased().everyMinutes(10).create();      // 변경 감지
+  ScriptApp.newTrigger("syncNow").timeBased().everyHours(6).create();      // 안전망
   syncNow();
   return "트리거 설치 완료 · 첫 동기화까지 마쳤습니다.";
+}
+
+/** 설치 확인용 */
+function checkSetup(){
+  var props = PropertiesService.getScriptProperties();
+  var f = DriveApp.getFileById(SRC_FILE_ID);
+  Logger.log("원본: " + f.getName() + " / 최종수정 " + f.getLastUpdated());
+  Logger.log("SYNC_TOKEN: " + (props.getProperty("SYNC_TOKEN") ? "설정됨" : "없음"));
+  Logger.log("마지막 동기화: " + (props.getProperty("LAST_SYNC") || "없음"));
+  Logger.log("트리거: " + ScriptApp.getProjectTriggers().map(function(t){
+    return t.getHandlerFunction();
+  }).join(", "));
 }
