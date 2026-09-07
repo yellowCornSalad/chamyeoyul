@@ -41,7 +41,7 @@ const META: Record<string, Record<string, string | number>> = {
   "로봇보안":        {sheet:"", agency:"산업통상자원부", dept:"산업통상자원부",
     biz:"제조 핵심기술 보호 AI 로봇/휴머노이드 지능보호·보안 실행 기술 개발", from:"2026-04-01", to:"2029-12-31",
     y2026:250000000, total:1060000000, note:"협약 예정"},
-  "ETRI(제안완료)":  {sheet:"", agency:"ETRI", dept:"과기정통부",
+  "ETRI 드론(신청중)": {sheet:"", agency:"ETRI", dept:"과기정통부",
     biz:"ETRI 기술 스케일업 R&BD 사업", from:"2026-10-01", to:"2027-09-30", y2026:208000000, total:208000000,
     note:"현금 9,600만 신청(평가) 진행중"},
 };
