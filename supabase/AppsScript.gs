@@ -79,7 +79,18 @@ function readCatalog_(sh){
   return out;
 }
 
-/** 사용내역 시트 */
+/** 날짜 칸을 yyyy-MM-dd 로. 빈 칸이거나 날짜가 아니면 빈 문자열 */
+function ymd_(v){
+  if (!v) return "";
+  if (Object.prototype.toString.call(v) === "[object Date]")
+    return Utilities.formatDate(v, TZ, "yyyy-MM-dd");
+  var s = s_(v);
+  return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : "";
+}
+
+/** 사용내역 시트
+    열: A과제명 B차년도 C비목 D세목 E세세목 F사용처 G상세내역 H집행여부
+        I예정연 J예정월 K예정일 L집행일 M금액 N결의번호 */
 function readHistory_(ss){
   var sh = ss.getSheetByName("사용내역");
   if (!sh) return [];
@@ -91,7 +102,12 @@ function readHistory_(ss){
     }
     var p = s_(v[r][0]), bm = s_(v[r][2]);
     if (!p || !bm) continue;
-    out.push({ proj:p, bm:bm, sm:s_(v[r][3]), ssm:s_(v[r][4]), desc:s_(v[r][6]).slice(0, 40) });
+    var dt = ymd_(v[r][11]);
+    out.push({ proj:p, bm:bm, sm:s_(v[r][3]), ssm:s_(v[r][4]),
+               who:s_(v[r][5]).slice(0, 24), desc:s_(v[r][6]).slice(0, 40),
+               date:dt, amt:num_(v[r][12]),
+               /* 시트가 X 로 표시했거나 집행일이 비어 있으면 아직 안 나간 돈 */
+               ok:(s_(v[r][7]).toUpperCase() !== "X" && !!dt) });
   }
   return out;
 }

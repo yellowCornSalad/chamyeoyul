@@ -74,7 +74,8 @@ Deno.serve(async (req) => {
     asof?: string;
     budgets?: Record<string, Row[]>;          // 시트명 -> 2026 비목 행
     catalog?: Record<string, Cat[]>;          // 시트명 -> 편성 세세목
-    history?: { proj: string; bm: string; sm: string; ssm: string; desc: string }[];
+    history?: { proj: string; bm: string; sm: string; ssm: string; who?: string;
+                desc: string; date?: string; amt?: number; ok?: boolean }[];
   };
   try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
 
@@ -89,16 +90,44 @@ Deno.serve(async (req) => {
 
   // 집행 이력에서 (비목,세목,세세목) 빈도
   const hist: Record<string, Record<string, number>> = {};
-  const samples: Record<string, string[]> = {};
   for (const h of history) {
     const web = sheet2web[h.proj] ?? h.proj;
     if (!h.ssm) continue;
     const k = `${h.bm}|${h.sm}|${h.ssm}`;
     (hist[web] ??= {})[k] = ((hist[web] ?? {})[k] ?? 0) + 1;
-    if (h.desc) {
-      const s = (samples[h.ssm] ??= []);
-      if (s.length < 6) s.push(h.desc.slice(0, 40));
-    }
+  }
+
+  /* 화면에 그대로 보여줄 집행 내역.
+     전부 실으면 스냅샷이 커지므로 올해 것은 전부 + 그 앞은 최근순으로 CAP 까지만 담는다. */
+  const CAP = 280;
+  const asof = body.asof || new Date().toISOString().slice(0, 10);
+  const year = asof.slice(0, 4);
+  type Raw = { proj: string; bm: string; sm: string; ssm: string; who?: string;
+               desc: string; date?: string; amt?: number; ok?: boolean };
+  type Line = { t: string; p: string; b: string; s: string; x: string; w: string; d: string; a: number };
+  const line = (h: Raw): Line => ({
+    t: h.date ?? "", p: sheet2web[h.proj] ?? h.proj, b: h.bm, s: h.sm, x: h.ssm,
+    w: (h.who ?? "").slice(0, 24), d: (h.desc ?? "").slice(0, 40), a: Math.round(h.amt ?? 0),
+  });
+  const byNewest = (a: Line, b: Line) => (a.t < b.t ? 1 : a.t > b.t ? -1 : 0);
+
+  const done = history.filter((h) => h.ok !== false && h.date).map(line).sort(byNewest);
+  const thisYear = done.filter((h) => h.t.slice(0, 4) === year);
+  const older = done.filter((h) => h.t.slice(0, 4) !== year);
+  const histLines = thisYear.concat(older.slice(0, Math.max(0, CAP - thisYear.length)));
+
+  // 아직 안 나간 돈(집행여부 X 또는 집행일 없음) — 결재 예정으로 따로 보여준다
+  const planLines = history.filter((h) => h.ok === false || !h.date).map(line).sort(byNewest);
+
+  /* 세세목별 최근 집행 사례 — 추천 근거로 쓴다.
+     hist 에 이미 실린 건은 화면에서 합쳐 보므로 여기서는 뺀다(스냅샷 크기). */
+  const lineKey = (h: Line) => `${h.t}|${h.d}|${h.a}|${h.p}`;
+  const inHist = new Set(histLines.map(lineKey));
+  const samples: Record<string, Line[]> = {};
+  for (const h of done) {
+    if (!h.x || !h.d || inHist.has(lineKey(h))) continue;
+    const s = (samples[h.x] ??= []);
+    if (s.length < 6) s.push(h);
   }
 
   const projects = Object.entries(META).map(([name, m]) => {
@@ -125,7 +154,7 @@ Deno.serve(async (req) => {
              scheme: GOV_PROJ.has(name) ? "gov" : "rnd", rows, cat };
   });
 
-  const ds = { asof: body.asof || new Date().toISOString().slice(0, 10), projects, samples };
+  const ds = { asof, projects, samples, hist: histLines, plan: planLines };
   const plain = JSON.stringify(ds);
 
   // 참여율 데이터와 같은 방식으로 암호화 (열람 비번으로 복호화 가능)
@@ -192,6 +221,6 @@ Deno.serve(async (req) => {
   return json({
     ok: true, id: inserted[0]?.id, asof: ds.asof, sheetPw: pwNote, pruned,
     projects: projects.length, withBudget: projects.filter((p) => p.rows.length).length,
-    history: history.length, bytes: plain.length,
+    history: history.length, lines: histLines.length, plan: planLines.length, bytes: plain.length,
   });
 });
