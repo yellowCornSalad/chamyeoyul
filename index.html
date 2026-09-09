@@ -161,6 +161,7 @@
   .unpaidwrap.on{border-color:rgba(245,158,11,.5);background:var(--amber-soft);color:#92400e}
   .unpaidwrap input:disabled{cursor:not-allowed}
   .unpaidwrap:has(input:disabled){opacity:.65}
+  .synccard .r3{font-size:10px;font-weight:600;color:var(--muted);margin-top:3px;letter-spacing:.2px}
   .quitbadge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.4px;color:#fff;
     background:#94a3b8;border-radius:20px;padding:2px 7px 1px;margin-left:6px;vertical-align:middle}
   .ptable tr.retiredrow td:first-child b{color:var(--sub)}
@@ -596,6 +597,7 @@
         <div class="synccard">
           <div class="r1"><span class="dot pulse"></span> 실시간 동기화 중</div>
           <div class="r2" id="syncsub">2026년 기준 · 11개 과제</div>
+          <div class="r3" title="이 화면이 언제 배포된 판인지. 다르면 새로고침(Ctrl+Shift+R) 해주세요">화면 2026-09-09</div>
         </div>
       </div>
     </aside>
@@ -744,6 +746,9 @@ const SAVE_FN = SB_URL + "/functions/v1/save-participation";
 
 let PROJECTS=null, INDEX={}, NAMES=[];
 let sessionPassword=null, loadedVersionId=null, editing=null, editBackup=null;
+/* 담당이 아닌 과제의 미지급 변경분 — 저장은 '내 담당 과제'만 통째로 올리므로,
+   이건 서버 최신본 위에 그 한 칸만 얹는다. {과제명:{이름:true|false}} */
+let unpaidPatch = {};
 let selected=null, projectFilters=[], statusFilter="all";
 let EMPLOYEES={}, view="main", candStatusFilter="all";
 let teamFilter="", sortKey="team", candSortKey="avail";
@@ -1028,14 +1033,14 @@ function cardEdit(name){
   const m=strip(entries); const {mx,mi}=peakOf(m); const rem=r1(100-mx);
   let html=`<div class="card"><h2>${name}${isRetired(name)?' <span class="quitbadge">퇴사</span>':''} <span class="tag lead">수정 중</span></h2>`;
   if(teamOf(name)) html+=`<div class="cardteam">${teamOf(name)}</div>`;
-  html+=`<div class="editnote">참여율(%)·기간(월)을 바꾸면 아래 합계가 바로 갱신돼요. 아래 <b>“과제에 추가”</b>로 새 과제에 투입할 수 있고, 각 과제의 <b>제외</b>로 뺄 수 있어요. <b>저장</b>을 눌러야 반영됩니다.</div>`;
+  html+=`<div class="editnote">참여율(%)·기간(월)을 바꾸면 아래 합계가 바로 갱신돼요. 아래 <b>“과제에 추가”</b>로 새 과제에 투입할 수 있고, 각 과제의 <b>제외</b>로 뺄 수 있어요. <b>저장</b>을 눌러야 반영됩니다.<br><b>미지급</b> 체크는 이미 참여 중인 인력도 바꿀 수 있고, 담당이 아닌 과제여도 바꿀 수 있어요(참여율·기간은 담당자만).</div>`;
   entries.forEach((e,ei)=>{
     const own=canEdit(e.project);
     html+=`<div class="ejrow${own?'':' lockedrow'}"><div class="ejhead"><span class="chipdot" style="background:${projColor(e.project).fg}"></span>${e.project} <span class="rl">${e.role}${e.isNew?" · 신규":""}</span>`+(e.note?` <span class="nt">· ${e.note}</span>`:``)
-      +`<label class="chkwrap unpaidwrap${e.unpaid?' on':''}" title="이 과제에서 미지급인건비로 계상하는 인력이면 체크">`
-      +`<input type="checkbox" class="unpaidchk" data-proj="${e.project}" data-ei="${ei}"${e.unpaid?' checked':''}${own?'':' disabled'}> 미지급</label>`
+      +`<label class="chkwrap unpaidwrap${e.unpaid?' on':''}" title="${own?'':ownerName(e.project)+' 담당 과제지만 '}미지급인건비 여부는 바꿀 수 있어요">`
+      +`<input type="checkbox" class="unpaidchk" data-proj="${e.project}" data-ei="${ei}"${e.unpaid?' checked':''}${isAdmin()?'':' disabled'}> 미지급</label>`
       +(own?`<button class="projdel" data-proj="${e.project}" title="이 과제에서 제외">제외</button>`
-           :`<span class="lockb">🔒 ${ownerName(e.project)} 담당</span>`)+`</div>`;
+           :`<span class="lockb">🔒 ${ownerName(e.project)} 담당 · 참여율·기간은 잠김</span>`)+`</div>`;
     e.s.forEach((seg,si)=>{
       html+=`<div class="segrow"><input class="rateinp" type="number" min="0" max="100" step="0.1" value="${seg[0]}" data-ei="${ei}" data-si="${si}"${own?'':' disabled'}><span class="segunit">%</span>`
         +`<select class="moninp" data-ei="${ei}" data-si="${si}" data-k="1"${own?'':' disabled'}>${monOpts(seg[1])}</select><span class="segunit">월 ~</span>`
@@ -1175,12 +1180,14 @@ function attachCardHandlers(){
   out.querySelectorAll(".segadd").forEach(b=> b.onclick=()=>{
     const e=INDEX[editing][+b.dataset.ei], last=e.s[e.s.length-1]; e.s.push([0, last?Math.min(12,last[2]+1):1, 12]); renderList(); });
   out.querySelectorAll(".unpaidchk").forEach(cb=> cb.onchange=()=>{
-    const pj=PROJECTS.find(p=>p.name===cb.dataset.proj); if(!pj) return;
+    const pname=cb.dataset.proj;
+    const pj=PROJECTS.find(p=>p.name===pname); if(!pj) return;
     const per=pj.people.find(p=>p.n===editing); if(!per) return;
     if(cb.checked) per.unpaid=true; else delete per.unpaid;
     const e=INDEX[editing][+cb.dataset.ei]; if(e) e.unpaid=cb.checked;
     cb.closest(".unpaidwrap").classList.toggle("on", cb.checked);
-    toast(`${cb.dataset.proj} · ${cb.checked?"미지급":"지급"}인건비로 표시했어요. “저장”을 눌러야 반영됩니다.`);
+    if(!canEdit(pname)) (unpaidPatch[pname] ||= {})[editing] = cb.checked;
+    toast(`${pname} · ${cb.checked?"미지급":"지급"}인건비로 표시했어요. “저장”을 눌러야 반영됩니다.`);
   });
   out.querySelectorAll(".projdel").forEach(b=> b.onclick=()=>{
     const pname=b.dataset.proj, pj=PROJECTS.find(p=>p.name===pname);
@@ -1218,7 +1225,7 @@ function refreshEditSummary(){
 function enterEdit(name){ editing=name; selected=name; editBackup=JSON.parse(JSON.stringify(PROJECTS)); renderList(); }
 function cancelEdit(name){
   if(editBackup){ PROJECTS=editBackup; buildIndex(); }
-  editing=null; editBackup=null; render();
+  editing=null; editBackup=null; unpaidPatch={}; render();
 }
 async function saveProjects(successMsg){
   if(!isAdmin()){ toast("열람 전용 계정입니다. 수정 권한이 없어요."); return false; }
@@ -1234,8 +1241,20 @@ async function saveProjects(successMsg){
     else merged.push(p);
   }
   for(const nm in mineMap) merged.push(mineMap[nm]);
+  /* 남의 담당 과제는 서버본을 그대로 쓰되, 내가 바꾼 미지급 표시만 그 한 칸에 얹는다 */
+  for(const pname in unpaidPatch){
+    const pj = merged.find(p=>p.name===pname); if(!pj) continue;
+    /* 서버본에 옛 비고 표기가 남아 있으면 먼저 플래그로 옮긴다.
+       안 그러면 해제해도 다음에 읽을 때 비고 때문에 다시 미지급이 된다. */
+    normalizeUnpaid(pj);
+    for(const who in unpaidPatch[pname]){
+      const per = (pj.people||[]).find(x=>x.n===who); if(!per) continue;
+      if(unpaidPatch[pname][who]) per.unpaid = true; else delete per.unpaid;
+    }
+  }
   const blob=await encWithDek({p:merged, by:ME.id, name:ME.name, at:new Date().toISOString()});
   const ins=await sbInsert(blob); loadedVersionId=ins.id;
+  unpaidPatch = {};
   PROJECTS=merged; buildIndex();
   toast(successMsg||"저장됐습니다. 모든 접속자에게 반영됩니다."); loadHistory(); return true;
 }
@@ -1398,7 +1417,7 @@ window.addEventListener("popstate", e=>{
   suppressPush=true; render(); suppressPush=false; window.scrollTo(0,0);
 });
 function toggleClear(){ const c=document.getElementById("qclear"); if(c) c.style.display=q.value?"":"none"; }
-function restoreIfEditing(){ if(editing&&editBackup){ PROJECTS=editBackup; buildIndex(); } editing=null; editBackup=null; }
+function restoreIfEditing(){ if(editing&&editBackup){ PROJECTS=editBackup; buildIndex(); unpaidPatch={}; } editing=null; editBackup=null; }
 function backToList(){ restoreIfEditing(); selected=null; pushView(); render(); window.scrollTo(0,0); }
 function goHome(){ restoreIfEditing(); view="main"; selected=null; projectFilters=[]; statusFilter="all"; teamFilter=""; q.value=""; pushView(); render(); window.scrollTo(0,0); }
 function clearSearch(){ q.value=""; selected=null; pushView(); render(); }
