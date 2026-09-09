@@ -149,6 +149,18 @@
   .ejrow.lockedrow .rateinp,.ejrow.lockedrow .moninp{background:#f3f4f6;cursor:not-allowed}
   .lockb{margin-left:8px;font-size:10.5px;font-weight:700;color:var(--sub);background:#f1f2f5;border-radius:6px;padding:3px 8px}
   .histwho{color:var(--accent-d);font-weight:800}
+  /* 미지급인건비 표시 */
+  .unpaidb{display:inline-block;font-size:9.5px;font-weight:800;color:#92400e;background:var(--amber-soft);
+    border:1px solid rgba(245,158,11,.35);border-radius:5px;padding:1px 6px;vertical-align:1px}
+  .chip.unpaid{box-shadow:inset 0 0 0 1px rgba(146,64,14,.35)}
+  .chip .uc{font-size:9px;font-weight:800;color:#92400e;background:rgba(255,255,255,.72);
+    border-radius:4px;padding:1px 4px;margin-left:1px}
+  .pcard-foot .unp{color:#b45309;font-weight:700}
+  .unpaidwrap{margin-left:8px;border:1px solid var(--line);border-radius:7px;padding:3px 8px;
+    font-size:11.5px;font-weight:700;color:var(--sub);background:#fff}
+  .unpaidwrap.on{border-color:rgba(245,158,11,.5);background:var(--amber-soft);color:#92400e}
+  .unpaidwrap input:disabled{cursor:not-allowed}
+  .unpaidwrap:has(input:disabled){opacity:.65}
   .quitbadge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.4px;color:#fff;
     background:#94a3b8;border-radius:20px;padding:2px 7px 1px;margin-left:6px;vertical-align:middle}
   .ptable tr.retiredrow td:first-child b{color:var(--sub)}
@@ -824,11 +836,29 @@ function cellColor(v){
 }
 let RETIRED=new Set();
 function isRetired(n){ return RETIRED.has(n) || !!(EMPLOYEES[n] && EMPLOYEES[n].off); }   /* off = 슬랙 계정 없음(퇴사) */
+/* 예전에는 비고칸에 '미지급인건비' 라고 손으로 적어 구분했다.
+   그 표기를 체크박스 값(unpaid)으로 옮긴다 — 누구든 한 번 저장하면 데이터에도 남는다. */
+function normalizeUnpaid(pj){
+  for(const p of (pj.people||[])){
+    if(p.unpaid || !p.note || !/미지급/.test(p.note)) continue;
+    p.unpaid = true;
+    const rest = p.note.replace(/미지급\s*인건비?/g,"").replace(/^[\s·,]+|[\s·,]+$/g,"");
+    if(rest) p.note = rest; else delete p.note;
+  }
+}
 function buildIndex(){
   INDEX={}; RETIRED=new Set();
-  for(const pj of PROJECTS) for(const p of pj.people)
-    { (INDEX[p.n] ||= []).push({project:pj.name, role:p.r||"참여연구원", isNew:!!p.isNew, note:p.note||"", s:p.s}); if(p.q) RETIRED.add(p.n); }
+  for(const pj of PROJECTS){ normalizeUnpaid(pj);
+    for(const p of pj.people)
+      { (INDEX[p.n] ||= []).push({project:pj.name, role:p.r||"참여연구원", isNew:!!p.isNew,
+                                  unpaid:!!p.unpaid, note:p.note||"", s:p.s}); if(p.q) RETIRED.add(p.n); }
+  }
   NAMES = Object.keys(INDEX);
+}
+/* 지금 보고 있는 범위(과제 필터)에서 미지급인건비로 잡혀 있나 */
+function unpaidInScope(name){
+  const es=(INDEX[name]||[]).filter(e=>e.unpaid);
+  return projectFilters.length ? es.some(e=>projectFilters.includes(e.project)) : es.length>0;
 }
 
 /* ===== DOM refs ===== */
@@ -841,11 +871,11 @@ const listsub = document.getElementById("listsub");
 /* ===== 카드/필터 ===== */
 function projStats(){
   const map={};
-  for(const pj of PROJECTS){ let cnt=0,sum=0,nw=0;
-    for(const p of pj.people){ cnt++; if(p.isNew) nw++;
+  for(const pj of PROJECTS){ let cnt=0,sum=0,nw=0,up=0;
+    for(const p of pj.people){ cnt++; if(p.isNew) nw++; if(p.unpaid) up++;
       const m=Array(13).fill(0); for(const [pct,f,t] of p.s) for(let i=f;i<=t;i++) m[i]+=pct;
       let mx=0; for(let i=1;i<=12;i++) if(m[i]>mx) mx=m[i]; sum+=mx; }
-    map[pj.name]={cnt, avg:cnt?Math.round(sum/cnt):0, nw}; }
+    map[pj.name]={cnt, avg:cnt?Math.round(sum/cnt):0, nw, up}; }
   return map;
 }
 function renderProjectCards(){
@@ -859,7 +889,8 @@ function renderProjectCards(){
   for(const pj of PROJECTS){ const s=st[pj.name];
     h+=`<div class="pcard ${projectFilters.includes(pj.name)?'active':''}" data-proj="${pj.name}"><div class="pcard-top"><span class="pcard-name"><i class="pcarddot" style="background:${projColor(pj.name).fg}"></i>${pj.name}</span>${canEdit(pj.name)?'<span class="pcard-badge mine">내 담당</span>':`<span class="pcard-badge own-${pj.own||'none'}">${ownerName(pj.name)}</span>`}</div>`
       +`<div class="pcard-label">참여 인원</div><div class="pcard-big">${s.cnt}<span class="unit">명</span></div>`
-      +`<div class="pcard-foot"><span>평균 ${s.avg}%</span><span class="fx">신규 ${s.nw}명</span></div></div>`;
+      +`<div class="pcard-foot"><span>평균 ${s.avg}%</span><span class="fx">신규 ${s.nw}명</span>`
+      +(s.up?`<span class="fx unp">미지급 ${s.up}명</span>`:``)+`</div></div>`;
   }
   if(isAdmin()) h+=`<div class="pcard addcard" id="addProjCard"><span class="plus">+</span><span class="lbl">새 과제 추가</span></div>`;
   projCardsEl.innerHTML=h;
@@ -887,9 +918,14 @@ const PALETTE=[
   {bg:"#fef3c7",fg:"#b45309"},{bg:"#ffedd5",fg:"#c2410c"},{bg:"#ffe4e6",fg:"#be123c"},
   {bg:"#fce7f3",fg:"#be185d"},{bg:"#e2e8f0",fg:"#475569"}];
 function projColor(name){ const i=PROJECTS.findIndex(p=>p.name===name); return PALETTE[(i<0?0:i)%PALETTE.length]; }
-function chipsHtml(names){
-  return `<div class="chips">`+names.map(n=>{ const c=projColor(n);
-    return `<span class="chip" style="background:${c.bg};color:${c.fg}"><i></i>${n}</span>`; }).join("")+`</div>`;
+/* entries = INDEX[name] — 과제별로 한 칩, 미지급이면 칩 안에 표시한다 */
+function chipsHtml(entries){
+  const up={}, order=[];
+  entries.forEach(e=>{ if(!(e.project in up)){ up[e.project]=false; order.push(e.project); }
+                       if(e.unpaid) up[e.project]=true; });
+  return `<div class="chips">`+order.map(n=>{ const c=projColor(n);
+    return `<span class="chip${up[n]?" unpaid":""}" style="background:${c.bg};color:${c.fg}">`
+      +`<i></i>${n}${up[n]?`<b class="uc">미지급</b>`:``}</span>`; }).join("")+`</div>`;
 }
 function candidates(){
   return Object.keys(EMPLOYEES).filter(n=>EMPLOYEES[n].team!=="인사총무팀" && !isRetired(n)).map(n=>{
@@ -903,10 +939,11 @@ function renderPills(){
   scope.forEach(n=>{ const b=bandOf(peakOf(strip(INDEX[n])).mx);
     if(b==="over")over++; else if(b==="full")full++; else if(b==="warn")warn++; else room++; });
   const quit=scope.filter(n=>isRetired(n)).length;
+  const unpaid=scope.filter(n=>unpaidInScope(n)).length;
   const P=(k,label,cls,cnt)=>`<button class="pill ${statusFilter===k?'active':''}" data-status="${k}">${cls?`<i class="pd ${cls}"></i>`:''}${label}<span class="cnt">${cnt}</span></button>`;
   pillsEl.innerHTML = P("all","전체","",scope.length)+P("room","여유","green",room)+P("warn","90%대","amber",warn)
     +P("full","100% 도달","red",full)+P("over","초과","red",over)
-    + (quit?P("quit","퇴사","",quit):"");
+    + (unpaid?P("unpaid","미지급","",unpaid):"") + (quit?P("quit","퇴사","",quit):"");
   pillsEl.querySelectorAll(".pill").forEach(b=> b.onclick=()=>{ statusFilter=b.dataset.status; selected=null; pushView(); render(); });
 }
 const CMP_MAIN={
@@ -942,6 +979,7 @@ function personList(){
   else if(statusFilter==="warn") rows=rows.filter(r=>bandOf(r.mx)==="warn");
   else if(statusFilter==="room") rows=rows.filter(r=>bandOf(r.mx)==="room");
   else if(statusFilter==="quit") rows=rows.filter(r=>isRetired(r.n));
+  else if(statusFilter==="unpaid") rows=rows.filter(r=>unpaidInScope(r.n));
   rows.sort(CMP_MAIN[sortKey]||CMP_MAIN.team);
   return rows;
 }
@@ -977,7 +1015,7 @@ function cardView(name){
   }else{
     html+=`<table class="pj">`;
     for(const e of entries.slice().sort((a,b)=>b.s[0][0]-a.s[0][0])){
-      html+=`<tr><td><span class="chipdot" style="background:${projColor(e.project).fg}"></span>${e.project}${canEdit(e.project)?' <span class="mineb">담당</span>':''}<div class="rl">${e.role}${e.isNew?" · 신규":""}`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div></td><td class="p">${segText(e.s)}</td></tr>`;
+      html+=`<tr><td><span class="chipdot" style="background:${projColor(e.project).fg}"></span>${e.project}${canEdit(e.project)?' <span class="mineb">담당</span>':''}${e.unpaid?' <span class="unpaidb">미지급</span>':''}<div class="rl">${e.role}${e.isNew?" · 신규":""}`+(e.note?` <span class="nt">· ${e.note}</span>`:``)+`</div></td><td class="p">${segText(e.s)}</td></tr>`;
     }
     html+=`</table>`;
   }
@@ -994,6 +1032,8 @@ function cardEdit(name){
   entries.forEach((e,ei)=>{
     const own=canEdit(e.project);
     html+=`<div class="ejrow${own?'':' lockedrow'}"><div class="ejhead"><span class="chipdot" style="background:${projColor(e.project).fg}"></span>${e.project} <span class="rl">${e.role}${e.isNew?" · 신규":""}</span>`+(e.note?` <span class="nt">· ${e.note}</span>`:``)
+      +`<label class="chkwrap unpaidwrap${e.unpaid?' on':''}" title="이 과제에서 미지급인건비로 계상하는 인력이면 체크">`
+      +`<input type="checkbox" class="unpaidchk" data-proj="${e.project}" data-ei="${ei}"${e.unpaid?' checked':''}${own?'':' disabled'}> 미지급</label>`
       +(own?`<button class="projdel" data-proj="${e.project}" title="이 과제에서 제외">제외</button>`
            :`<span class="lockb">🔒 ${ownerName(e.project)} 담당</span>`)+`</div>`;
     e.s.forEach((seg,si)=>{
@@ -1015,6 +1055,7 @@ function cardEdit(name){
       +`<select class="moninp" id="addFrom">${monOpts(1)}</select><span class="segunit">월 ~</span>`
       +`<select class="moninp" id="addTo">${monOpts(12)}</select><span class="segunit">월</span>`
       +`<label class="chkwrap"><input type="checkbox" id="addNew" checked> 신규</label>`
+      +`<label class="chkwrap"><input type="checkbox" id="addUnpaid"> 미지급</label>`
       +`<button class="addbtn" id="doAdd">추가</button></div>`
       +`<div class="addhint">여유 <b>${rem}%</b> — 이보다 크게 넣으면 100%를 넘어요.</div></div>`;
   }
@@ -1037,8 +1078,8 @@ function renderList(){
     const bd = bandOf(pk);
     const badge = `<span class="badge ${BAND_CLS[bd]}">${bd==="over"?"초과":bd==="full"?"100%":bd==="warn"?"90%대":"여유"}</span>`;
     const barc = bd==="over"||bd==="full"?"var(--red)":(bd==="warn"?"#f59e0b":"var(--green)");
-    const pjs=[...new Set(INDEX[r.n].map(x=>x.project))];
-    h+=`<tr data-n="${r.n}" class="${isRetired(r.n)?'retiredrow':''}"><td><b>${r.n}</b>${isRetired(r.n)?' <span class="quitbadge">퇴사</span>':''}${isNewIn(r.n)&&!isRetired(r.n)?' <span class="newbadge">NEW</span>':''}<div class="teamsub">${teamOf(r.n)||"—"}</div></td><td>${chipsHtml(pjs)}</td>`
+
+    h+=`<tr data-n="${r.n}" class="${isRetired(r.n)?'retiredrow':''}"><td><b>${r.n}</b>${isRetired(r.n)?' <span class="quitbadge">퇴사</span>':''}${isNewIn(r.n)&&!isRetired(r.n)?' <span class="newbadge">NEW</span>':''}<div class="teamsub">${teamOf(r.n)||"—"}</div></td><td>${chipsHtml(INDEX[r.n])}</td>`
       +`<td class="r ${BAND_TXT[bd]}">${pk}%</td>`
       +`<td class="barcol"><div class="bar"><span style="width:${Math.min(100,pk)}%;background:${barc}"></span></div></td>`
       +`<td class="r">${rem<0?`<span class="over">${rem}%</span>`:rem+"%"}</td><td class="r">${badge}</td></tr>`;
@@ -1133,6 +1174,14 @@ function attachCardHandlers(){
     const e=INDEX[editing][+b.dataset.ei]; if(e.s.length>1) e.s.splice(+b.dataset.si,1); else e.s[0][0]=0; renderList(); });
   out.querySelectorAll(".segadd").forEach(b=> b.onclick=()=>{
     const e=INDEX[editing][+b.dataset.ei], last=e.s[e.s.length-1]; e.s.push([0, last?Math.min(12,last[2]+1):1, 12]); renderList(); });
+  out.querySelectorAll(".unpaidchk").forEach(cb=> cb.onchange=()=>{
+    const pj=PROJECTS.find(p=>p.name===cb.dataset.proj); if(!pj) return;
+    const per=pj.people.find(p=>p.n===editing); if(!per) return;
+    if(cb.checked) per.unpaid=true; else delete per.unpaid;
+    const e=INDEX[editing][+cb.dataset.ei]; if(e) e.unpaid=cb.checked;
+    cb.closest(".unpaidwrap").classList.toggle("on", cb.checked);
+    toast(`${cb.dataset.proj} · ${cb.checked?"미지급":"지급"}인건비로 표시했어요. “저장”을 눌러야 반영됩니다.`);
+  });
   out.querySelectorAll(".projdel").forEach(b=> b.onclick=()=>{
     const pname=b.dataset.proj, pj=PROJECTS.find(p=>p.name===pname);
     if(!pj) return;
@@ -1155,8 +1204,11 @@ function attachCardHandlers(){
     }
     const pj=PROJECTS.find(p=>p.name===pname); if(!pj) return;
     if(pj.people.some(p=>p.n===editing)){ toast("이미 그 과제에 있습니다."); return; }
-    pj.people.push({n:editing, r:role, isNew:document.getElementById("addNew").checked, s:[[rate,from,to]]});
-    buildIndex(); render(); toast(`${pname}에 ${rate}% 추가했어요. “저장”을 눌러야 반영됩니다.`);
+    const per={n:editing, r:role, isNew:document.getElementById("addNew").checked, s:[[rate,from,to]]};
+    if(document.getElementById("addUnpaid").checked) per.unpaid=true;
+    pj.people.push(per);
+    buildIndex(); render();
+    toast(`${pname}에 ${rate}%${per.unpaid?" (미지급)":""} 추가했어요. “저장”을 눌러야 반영됩니다.`);
   };
 }
 function refreshEditSummary(){
@@ -1399,16 +1451,17 @@ function buildXlsx(sheets){
 }
 function exportSheets(){
   const sheets=[];
-  const ov=[["이름","상태","최대 참여율(%)","잔여(추가가능,%)","참여 과제수","참여 과제"]];
+  const ov=[["이름","상태","최대 참여율(%)","잔여(추가가능,%)","참여 과제수","참여 과제","미지급 과제"]];
   NAMES.map(n=>{const e=INDEX[n];const {mx}=peakOf(strip(e));return {n,mx,pjs:[...new Set(e.map(x=>x.project))]};})
     .sort((a,b)=>b.mx-a.mx||a.n.localeCompare(b.n))
-    .forEach(r=>ov.push([r.n,isRetired(r.n)?"퇴사":"재직",r.mx,r1(100-r.mx),r.pjs.length,r.pjs.join(", ")]));
+    .forEach(r=>ov.push([r.n,isRetired(r.n)?"퇴사":"재직",r.mx,r1(100-r.mx),r.pjs.length,r.pjs.join(", "),
+      (INDEX[r.n]||[]).filter(x=>x.unpaid).map(x=>x.project).join(", ")]));
   sheets.push({name:"전체 요약",rows:ov});
   for(const pj of PROJECTS){
-    const rows=[["구분","이름","신규여부","1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월","비고"]];
+    const rows=[["구분","이름","신규여부","지급구분","1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월","비고"]];
     for(const p of pj.people){
       const mm=Array(13).fill(0); for(const [pct,f,t] of p.s) for(let i=f;i<=t;i++) mm[i]+=pct;
-      const row=[p.r||"참여연구원",p.n,p.isNew?"신규":"기존"];
+      const row=[p.r||"참여연구원",p.n,p.isNew?"신규":"기존",p.unpaid?"미지급":"지급"];
       for(let i=1;i<=12;i++) row.push(mm[i]?r1(mm[i]):null);
       const note=p.note||"";
       row.push(p.q ? (note?note+" · 퇴사":"퇴사") : note); rows.push(row);
